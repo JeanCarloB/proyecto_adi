@@ -1,0 +1,9 @@
+{
+    "name": "grupo4/proyecto-adi",
+    "description": "Sistema de gestión comunal ADI Santa Elena",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "mongodb/mongodb": "^2.1"
+    }
+}
