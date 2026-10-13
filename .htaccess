@@ -1,0 +1,4 @@
+<FilesMatch "^\.env">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /(vendor|scripts|docs|\.git)(/|$)
