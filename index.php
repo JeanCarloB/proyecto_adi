@@ -1,6 +1,11 @@
 <?php
 // Hola mundo: verifica PHP, la extensión mongodb, Composer y la conexión a Atlas.
+require_once __DIR__ . '/includes/conexion.php';
 
+$baseDatos->command(['ping' => 1]);
+
+echo 'Conexión reutilizable con MongoDB correcta.';
+exit;
 $checks = [];
 
 // 1. PHP y extensión
