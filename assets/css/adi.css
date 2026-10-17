@@ -1,0 +1,573 @@
+/*
+ * ADIministra · Sistema visual
+ *
+ * Una sola hoja de estilos para toda la aplicación. Se carga después de
+ * Bootstrap y ajusta su apariencia: superficies claras, bordes finos en vez
+ * de sombras, tipografía Inter y un único color de acento (el verde del logo).
+ *
+ * Los colores de módulo (azul, naranja, verde) salen del logo y solo marcan
+ * a qué módulo pertenece cada sección. Nunca se usan para estados.
+ */
+
+:root {
+    /* Superficies */
+    --adi-bg:        #f6f6f3;
+    --adi-surface:   #ffffff;
+    --adi-subtle:    #f1f0ec;
+    --adi-border:    #e6e4de;
+    --adi-border-strong: #d6d3cb;
+
+    /* Texto */
+    --adi-ink:       #18211c;
+    --adi-ink-2:     #4a524d;
+    --adi-muted:     #7a807c;
+
+    /* Marca */
+    --adi-brand-dark: #0f3d26;
+    --adi-brand:      #3c8d2f;
+    --adi-accent:     #17603d;
+    --adi-accent-hover: #0f4c2f;
+    --adi-accent-soft:  #e9f3ec;
+
+    /* Módulos (del logo) */
+    --adi-mod-alquileres: #1d4f8c;
+    --adi-mod-ventas:     #e0661b;
+    --adi-mod-contactos:  #2f8a3a;
+
+    /* Estados: siempre con texto, nunca solo color */
+    --adi-ok-bg:    #e7f4eb;
+    --adi-ok-ink:   #1b6a3d;
+    --adi-warn-bg:  #fdf1dc;
+    --adi-warn-ink: #8a5300;
+    --adi-danger:   #b42318;
+    --adi-danger-soft: #fdecea;
+
+    --adi-radius:    12px;
+    --adi-radius-sm: 8px;
+
+    /* Bootstrap */
+    --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --bs-body-bg: var(--adi-bg);
+    --bs-body-color: var(--adi-ink);
+    --bs-border-color: var(--adi-border);
+    --bs-link-color-rgb: 23, 96, 61;
+    --bs-link-hover-color-rgb: 15, 76, 47;
+}
+
+body {
+    font-family: var(--bs-body-font-family);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.006em;
+}
+
+/* --- Barra superior -------------------------------------------------------- */
+
+.adi-topbar {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--adi-border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.adi-topbar .container {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.adi-brand {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    text-decoration: none;
+}
+
+.adi-wordmark {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--adi-brand);
+    line-height: 1;
+}
+
+.adi-wordmark b {
+    color: var(--adi-brand-dark);
+    font-weight: 800;
+}
+
+.adi-tagline {
+    font-size: .8125rem;
+    color: var(--adi-muted);
+    padding-left: .75rem;
+    border-left: 1px solid var(--adi-border);
+}
+
+.adi-nav {
+    display: flex;
+    gap: .25rem;
+}
+
+.adi-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .45rem .8rem;
+    border-radius: 999px;
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--adi-ink-2);
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+
+.adi-nav a:hover {
+    background: var(--adi-subtle);
+    color: var(--adi-ink);
+}
+
+.adi-nav a.is-active {
+    background: var(--adi-ink);
+    color: #fff;
+}
+
+.adi-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+}
+
+.adi-dot--alquileres { background: var(--adi-mod-alquileres); }
+.adi-dot--ventas     { background: var(--adi-mod-ventas); }
+.adi-dot--contactos  { background: var(--adi-mod-contactos); }
+
+.adi-nav a.is-active .adi-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, .9); }
+
+/* --- Encabezado de página -------------------------------------------------- */
+
+.adi-page {
+    padding-top: 2.5rem;
+    padding-bottom: 4rem;
+}
+
+.adi-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.adi-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--adi-muted);
+    margin-bottom: .5rem;
+}
+
+.adi-title {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    margin: 0;
+}
+
+.adi-lead {
+    color: var(--adi-muted);
+    margin: .5rem 0 0;
+    max-width: 64ch;
+}
+
+/* --- Superficies ----------------------------------------------------------- */
+
+.adi-card {
+    background: var(--adi-surface);
+    border: 1px solid var(--adi-border);
+    border-radius: var(--adi-radius);
+}
+
+.adi-card-body { padding: 1.5rem; }
+
+.adi-section-title {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--adi-ink-2);
+    margin: 0 0 1rem;
+}
+
+/* --- Indicadores ----------------------------------------------------------- */
+
+.adi-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.adi-stat {
+    background: var(--adi-surface);
+    border: 1px solid var(--adi-border);
+    border-radius: var(--adi-radius);
+    padding: 1.1rem 1.25rem;
+}
+
+.adi-stat-label {
+    font-size: .8125rem;
+    color: var(--adi-muted);
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.adi-stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-top: .35rem;
+    line-height: 1.1;
+}
+
+@media (max-width: 767px) {
+    .adi-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .adi-topbar .container { height: auto; padding-top: .75rem; padding-bottom: .75rem; flex-wrap: wrap; gap: .5rem; }
+    .adi-nav { width: 100%; overflow-x: auto; }
+    .adi-title { font-size: 1.6rem; }
+    .adi-page-head { flex-direction: column; align-items: flex-start; }
+    .adi-tagline { display: none; }
+}
+
+/* --- Botones --------------------------------------------------------------- */
+
+.btn {
+    --bs-btn-font-weight: 500;
+    --bs-btn-border-radius: 10px;
+    --bs-btn-padding-x: 1rem;
+    --bs-btn-padding-y: .55rem;
+    --bs-btn-font-size: .875rem;
+    letter-spacing: -0.005em;
+}
+
+.btn-sm {
+    --bs-btn-padding-x: .7rem;
+    --bs-btn-padding-y: .32rem;
+    --bs-btn-font-size: .8125rem;
+    --bs-btn-border-radius: 8px;
+}
+
+.adi-btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--adi-accent);
+    --bs-btn-border-color: var(--adi-accent);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--adi-accent-hover);
+    --bs-btn-hover-border-color: var(--adi-accent-hover);
+    --bs-btn-active-bg: var(--adi-accent-hover);
+    --bs-btn-active-border-color: var(--adi-accent-hover);
+    --bs-btn-active-color: #fff;
+    box-shadow: 0 1px 2px rgba(15, 61, 38, .18);
+}
+
+.adi-btn-ghost {
+    --bs-btn-color: var(--adi-ink);
+    --bs-btn-bg: var(--adi-surface);
+    --bs-btn-border-color: var(--adi-border-strong);
+    --bs-btn-hover-color: var(--adi-ink);
+    --bs-btn-hover-bg: var(--adi-subtle);
+    --bs-btn-hover-border-color: var(--adi-border-strong);
+    --bs-btn-active-bg: var(--adi-subtle);
+    --bs-btn-active-color: var(--adi-ink);
+}
+
+.adi-btn-soft {
+    --bs-btn-color: var(--adi-accent);
+    --bs-btn-bg: var(--adi-accent-soft);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--adi-accent);
+    --bs-btn-hover-border-color: var(--adi-accent);
+    --bs-btn-active-bg: var(--adi-accent-hover);
+    --bs-btn-active-color: #fff;
+}
+
+.adi-btn-quiet-danger {
+    --bs-btn-color: var(--adi-muted);
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-color: var(--adi-danger);
+    --bs-btn-hover-bg: var(--adi-danger-soft);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-bg: var(--adi-danger-soft);
+    --bs-btn-active-color: var(--adi-danger);
+}
+
+/* --- Formularios ----------------------------------------------------------- */
+
+.form-label {
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--adi-ink-2);
+    margin-bottom: .4rem;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--adi-border-strong);
+    border-radius: 10px;
+    min-height: 42px;
+    font-size: .9375rem;
+    background-color: var(--adi-surface);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--adi-accent);
+    box-shadow: 0 0 0 4px rgba(23, 96, 61, .12);
+}
+
+.input-group-text {
+    border-color: var(--adi-border-strong);
+    background: var(--adi-subtle);
+    color: var(--adi-muted);
+    border-radius: 10px;
+}
+
+.form-text { color: var(--adi-muted); font-size: .8125rem; }
+
+.adi-filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: .875rem;
+    align-items: end;
+    padding: 1rem 1.25rem;
+}
+
+@media (max-width: 991px) {
+    .adi-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.adi-form-narrow { max-width: 640px; margin: 0 auto; }
+
+.adi-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    background: var(--adi-subtle);
+    margin: 1.5rem 0;
+}
+
+.adi-total span { color: var(--adi-muted); font-size: .875rem; }
+.adi-total strong { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+
+/* --- Tablas ---------------------------------------------------------------- */
+
+.adi-table {
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: #fafaf7;
+    margin: 0;
+    font-size: .9rem;
+}
+
+.adi-table thead th {
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--adi-muted);
+    border-bottom: 1px solid var(--adi-border);
+    padding: .85rem 1rem;
+    white-space: nowrap;
+}
+
+.adi-table tbody td {
+    padding: .95rem 1rem;
+    border-bottom: 1px solid var(--adi-border);
+    vertical-align: middle;
+}
+
+.adi-table tbody tr:last-child td { border-bottom: 0; }
+
+.adi-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.adi-date strong { font-weight: 500; display: block; }
+.adi-date small  { color: var(--adi-muted); font-size: .75rem; text-transform: capitalize; }
+
+.adi-sub { color: var(--adi-muted); font-size: .8125rem; }
+
+.adi-table-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .9rem 1rem;
+    border-bottom: 1px solid var(--adi-border);
+    font-size: .8125rem;
+    color: var(--adi-muted);
+}
+
+/* --- Estados --------------------------------------------------------------- */
+
+.adi-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.adi-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.adi-pill--ok      { background: var(--adi-ok-bg);   color: var(--adi-ok-ink); }
+.adi-pill--warn    { background: var(--adi-warn-bg); color: var(--adi-warn-ink); }
+.adi-pill--neutral { background: var(--adi-subtle);  color: var(--adi-muted); }
+
+.adi-tag {
+    display: inline-block;
+    padding: .15rem .55rem;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 500;
+    background: var(--adi-subtle);
+    color: var(--adi-ink-2);
+}
+
+/* --- Tarjetas de espacio --------------------------------------------------- */
+
+.adi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1rem;
+}
+
+.adi-space {
+    display: flex;
+    flex-direction: column;
+    background: var(--adi-surface);
+    border: 1px solid var(--adi-border);
+    border-radius: var(--adi-radius);
+    padding: 1.35rem 1.4rem 1.1rem;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.adi-space:hover {
+    border-color: var(--adi-border-strong);
+    box-shadow: 0 6px 24px -12px rgba(24, 33, 28, .18);
+}
+
+.adi-space.is-off { background: #fbfbf9; }
+.adi-space.is-off .adi-space-name { color: var(--adi-muted); }
+
+.adi-space-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-bottom: 1.1rem;
+}
+
+.adi-space-name {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 .35rem;
+}
+
+.adi-rates {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.1rem;
+    border-top: 1px solid var(--adi-border);
+}
+
+.adi-rates li {
+    display: flex;
+    justify-content: space-between;
+    padding: .6rem 0;
+    border-bottom: 1px dashed var(--adi-border);
+    font-size: .9rem;
+}
+
+.adi-rates li span { color: var(--adi-muted); }
+.adi-rates li strong { font-weight: 500; font-variant-numeric: tabular-nums; }
+.adi-rates li.is-empty strong { color: #a4a9a5; font-weight: 400; }
+
+.adi-space-actions {
+    display: flex;
+    gap: .5rem;
+    margin-top: auto;
+}
+
+/* --- Avisos ---------------------------------------------------------------- */
+
+.adi-alert {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .9rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    margin-bottom: 1.5rem;
+    font-size: .9rem;
+}
+
+.adi-alert ul { margin: 0; padding-left: 1.1rem; }
+
+.adi-alert--ok     { background: var(--adi-ok-bg);     color: var(--adi-ok-ink);   border-color: #cfe7d7; }
+.adi-alert--warn   { background: var(--adi-warn-bg);   color: var(--adi-warn-ink); border-color: #f6dfb4; }
+.adi-alert--danger { background: var(--adi-danger-soft); color: var(--adi-danger); border-color: #f8d0cb; }
+
+.adi-alert-icon {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #fff;
+    background: currentColor;
+}
+
+.adi-alert-icon > span { color: #fff; }
+
+.adi-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--adi-muted);
+}
+
+.adi-empty strong { display: block; color: var(--adi-ink); font-weight: 600; margin-bottom: .25rem; }
+
+/* --- Contactos: buscador sin botón (filtra en el navegador) --------------- */
+.adi-filters--search { grid-template-columns: 2fr 1fr 1fr; }
+@media (max-width: 991px) {
+    .adi-filters--search { grid-template-columns: 1fr; }
+}
+.adi-contact-name { font-weight: 600; color: var(--adi-ink); }
+.adi-link-quiet { color: inherit; text-decoration: none; }
+.adi-link-quiet:hover { color: var(--adi-accent); text-decoration: underline; }
