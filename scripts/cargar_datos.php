@@ -134,6 +134,7 @@ for ($i = 0; $i < 500; $i++) {
         'telefono' => $faker->randomElement(['2', '6', '7', '8']) . $faker->numerify('###-####'),
         'correo'   => $faker->unique()->safeEmail(),
         'notas'    => $faker->optional(0.4, '')->sentence(),
+        'activo'   => true,
     ];
 }
 insertar($db, 'contactos', $docs);
