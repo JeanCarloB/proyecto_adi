@@ -97,6 +97,7 @@ avisoExito([
     'creada'     => 'Reserva apartada. Si no se confirma el pago en ' . HORAS_APARTADO . ' horas, vence sola.',
     'confirmada' => 'Pago confirmado. La reserva ya no vence.',
     'cancelada'  => 'La reserva se canceló y el horario quedó libre.',
+    'editada'    => 'Los cambios de la reserva se guardaron.',
 ]);
 if (($_GET['error'] ?? '') === 'confirmar') {
     aviso('warn', 'No se pudo confirmar: la reserva ya estaba confirmada o el apartado venció.');
@@ -204,6 +205,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                             <?php endif; ?>
                         </td>
                         <td class="text-end text-nowrap">
+                            <a href="editar.php?id=<?= e($r['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($apartado): ?>
                                 <form action="confirmar.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Confirmar el pago de esta reserva?');">

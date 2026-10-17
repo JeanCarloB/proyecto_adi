@@ -18,6 +18,20 @@ use MongoDB\BSON\UTCDateTime;
 const FRANJAS = ['mañana' => 'Mañana', 'tarde' => 'Tarde', 'noche' => 'Noche'];
 const TIPOS_ESPACIO = ['salon' => 'Salón', 'cancha' => 'Cancha'];
 
+/** Horario de cada franja (acordado por el grupo; solo se usa para mostrar). */
+const HORARIOS_FRANJA = [
+    'mañana' => ['08:00', '12:00'],
+    'tarde'  => ['13:00', '17:00'],
+    'noche'  => ['18:00', '22:00'],
+];
+
+/**
+ * Color de cada espacio en el calendario, en este orden (por nombre).
+ * Paleta revisada para daltonismo; el nombre del espacio siempre va escrito
+ * junto al color, así que el color nunca es la única pista.
+ */
+const COLORES_ESPACIO = ['#2a78d6', '#eb6834', '#1baf7a', '#6250d6', '#e87ba4', '#eda100'];
+
 /** Horas que dura un apartado antes de que el índice TTL lo elimine. */
 const HORAS_APARTADO = 48;
 
@@ -56,6 +70,13 @@ function mostrarHora(UTCDateTime $fecha): string
 {
     $d = $fecha->toDateTime()->setTimezone(new DateTimeZone(ZONA_LOCAL));
     return $d->format('j') . ' ' . MESES[(int) $d->format('n') - 1] . ' · ' . $d->format('H:i');
+}
+
+/** "18:00 – 22:00" */
+function horarioFranja(string $franja): string
+{
+    [$inicio, $fin] = HORARIOS_FRANJA[$franja] ?? ['', ''];
+    return $inicio === '' ? '' : $inicio . ' – ' . $fin;
 }
 
 // --- Datos ------------------------------------------------------------------
@@ -116,4 +137,28 @@ function codigoError(Throwable $e): int
         return 11000;
     }
     return (int) $e->getCode();
+}
+
+/**
+ * A dónde volver después de crear, confirmar o cancelar una reserva.
+ * Si la acción salió del calendario, regresa al mismo mes y filtro; si no, a la lista.
+ * $resultado es el parámetro de la URL, por ejemplo 'ok=confirmada'.
+ */
+function destinoReservas(string $resultado): string
+{
+    $origen = $_POST + $_GET;
+    if (texto($origen['volver'] ?? '') !== 'calendario') {
+        return rtrim('index.php?' . $resultado, '?');
+    }
+
+    $parametros = [];
+    $mes = texto($origen['mes'] ?? '');
+    if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes)) {
+        $parametros['mes'] = $mes;
+    }
+    if ($filtro = idValido(texto($origen['filtro'] ?? ''))) {
+        $parametros['espacio'] = (string) $filtro;
+    }
+
+    return rtrim('calendario.php?' . ($parametros ? http_build_query($parametros) . '&' : '') . $resultado, '?&');
 }

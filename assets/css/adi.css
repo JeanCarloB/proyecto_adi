@@ -571,3 +571,340 @@ body {
 .adi-contact-name { font-weight: 600; color: var(--adi-ink); }
 .adi-link-quiet { color: inherit; text-decoration: none; }
 .adi-link-quiet:hover { color: var(--adi-accent); text-decoration: underline; }
+
+/* --- Calendario de reservas ---------------------------------------------- */
+
+.adi-cal { overflow: hidden; }
+
+.adi-cal-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1.5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--adi-border);
+}
+
+.adi-cal-nav { display: flex; align-items: center; gap: .5rem; }
+.adi-cal-arrow { width: 2rem; padding-left: 0; padding-right: 0; font-size: 1.1rem; line-height: 1; }
+.adi-cal-month {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 .35rem;
+    min-width: 9.5rem;
+    text-align: center;
+}
+.adi-cal-month span { color: var(--adi-muted); font-weight: 500; }
+
+.adi-cal-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; }
+.adi-cal-filter .form-select { min-width: 13rem; }
+
+.adi-cal-legend {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    color: var(--adi-ink-2);
+    cursor: default;
+    user-select: none;
+}
+.adi-legend-title {
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--adi-muted);
+    margin-right: .15rem;
+}
+/* Muestra en miniatura de cómo se ve una reserva: no es un botón */
+.adi-legend-chip {
+    padding: .15rem .5rem .15rem .55rem;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-weight: 500;
+    line-height: 1.3;
+    box-shadow: inset 3px 0 0 #8a8f8b;
+}
+.adi-legend-chip.is-confirmado { background: #ebecea; }
+.adi-legend-chip.is-apartado   { background: transparent; border: 1px dashed #b3b7b4; }
+
+/* Cuadrícula del mes */
+.adi-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.adi-cal-head {
+    padding: .6rem .75rem;
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--adi-muted);
+    border-bottom: 1px solid var(--adi-border);
+}
+
+.adi-cal-day {
+    min-height: 124px;
+    padding: .4rem .45rem .5rem;
+    border-right: 1px solid var(--adi-border);
+    border-bottom: 1px solid var(--adi-border);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    cursor: pointer;
+    transition: background .12s ease;
+    min-width: 0;
+}
+.adi-cal-day:nth-child(7n) { border-right: 0; }
+.adi-cal-day:nth-last-child(-n+7) { border-bottom: 0; }
+.adi-cal-day:hover { background: #fbfbf9; }
+/* Días ya pasados y días de los meses vecinos: se ven desvanecidos */
+.adi-cal-day.is-past .adi-cal-event,
+.adi-cal-day.is-past .adi-cal-more,
+.adi-cal-day.is-out .adi-cal-event,
+.adi-cal-day.is-out .adi-cal-more { opacity: .5; }
+.adi-cal-day.is-past .adi-cal-date,
+.adi-cal-day.is-out .adi-cal-date { color: #a9aeab; font-weight: 500; }
+
+.adi-cal-date {
+    align-self: flex-start;
+    border: 0;
+    background: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--adi-ink);
+    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
+}
+.adi-cal-date:hover { background: var(--adi-subtle); }
+.adi-cal-day.is-today .adi-cal-date { background: var(--adi-accent); color: #fff; }
+
+/* Una reserva dentro del día */
+.adi-cal-event {
+    --esp: #8a8f8b;
+    display: flex;
+    align-items: baseline;
+    gap: .35rem;
+    width: 100%;
+    min-width: 0;
+    padding: .2rem .45rem .2rem .5rem;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-size: .75rem;
+    line-height: 1.3;
+    text-align: left;
+    color: var(--adi-ink);
+    background: color-mix(in srgb, var(--esp) 14%, #fff);
+    box-shadow: inset 3px 0 0 var(--esp);
+    transition: transform .1s ease, background .12s ease;
+}
+.adi-cal-event:hover { background: color-mix(in srgb, var(--esp) 24%, #fff); }
+.adi-cal-event.is-apartado {
+    background: #fff;
+    border: 1px dashed color-mix(in srgb, var(--esp) 70%, #fff);
+}
+.adi-cal-event.is-apartado:hover { background: color-mix(in srgb, var(--esp) 8%, #fff); }
+
+.adi-cal-time { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--adi-ink-2); flex: none; }
+.adi-cal-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+
+.adi-cal-more {
+    border: 0;
+    background: none;
+    padding: .1rem .5rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--adi-ink-2);
+    text-align: left;
+    border-radius: 5px;
+}
+.adi-cal-more:hover { background: var(--adi-subtle); }
+
+/* Agenda: reemplaza la cuadrícula en pantallas chicas */
+.adi-cal-agenda { display: none; }
+
+@media (max-width: 767px) {
+    .adi-cal-grid { display: none; }
+    .adi-cal-agenda { display: block; }
+    .adi-cal-toolbar { flex-direction: column; align-items: stretch; }
+    .adi-cal-nav { justify-content: space-between; }
+    .adi-cal-filter .form-select { min-width: 0; width: 100%; }
+    .adi-cal-legend { justify-content: flex-start; }
+}
+
+.adi-agenda-day {
+    display: grid;
+    grid-template-columns: 3.25rem 1fr;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--adi-border);
+}
+.adi-agenda-day:last-child { border-bottom: 0; }
+.adi-agenda-day.is-past { opacity: .6; }
+.adi-agenda-date {
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    line-height: 1.1;
+}
+.adi-agenda-date strong { font-size: 1.25rem; }
+.adi-agenda-date span { font-size: .6875rem; text-transform: uppercase; letter-spacing: .05em; color: var(--adi-muted); }
+.adi-agenda-day.is-today .adi-agenda-date strong { color: var(--adi-accent); }
+.adi-agenda-events { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adi-agenda-events .adi-cal-event { padding: .45rem .6rem; font-size: .8125rem; }
+
+/* Tarjeta de detalle */
+.adi-dialog {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    padding: 1.5rem;
+    border: 1px solid var(--adi-border);
+    border-radius: 16px;
+    background: var(--adi-surface);
+    color: var(--adi-ink);
+    box-shadow: 0 24px 60px -12px rgba(16, 24, 20, .25);
+}
+.adi-dialog::backdrop { background: rgba(20, 28, 24, .32); backdrop-filter: blur(2px); }
+.adi-dialog[open] { animation: adi-pop .16s ease-out; }
+@keyframes adi-pop { from { opacity: 0; transform: translateY(6px) scale(.98); } }
+
+.adi-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.adi-dialog-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--adi-ink-2);
+    margin-bottom: .2rem;
+}
+.adi-dialog-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.adi-dialog-close {
+    border: 0;
+    background: var(--adi-subtle);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--adi-ink-2);
+    flex: none;
+}
+.adi-dialog-close:hover { background: var(--adi-border); }
+
+.adi-dl { margin: 0; border-top: 1px solid var(--adi-border); }
+.adi-dl-row {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 1rem;
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--adi-border);
+    font-size: .875rem;
+}
+.adi-dl-row dt { font-weight: 500; color: var(--adi-muted); }
+.adi-dl-row dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+.adi-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+    margin-top: 1.25rem;
+}
+
+/* Lista de reservas dentro de la tarjeta del día */
+.adi-day-list { display: flex; flex-direction: column; gap: 6px; }
+.adi-day-item {
+    --esp: #8a8f8b;
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    padding: .6rem .75rem .6rem .9rem;
+    border: 1px solid var(--adi-border);
+    border-radius: 10px;
+    background: var(--adi-surface);
+    box-shadow: inset 3px 0 0 var(--esp);
+    text-align: left;
+}
+.adi-day-item:hover { background: #fbfbf9; border-color: var(--adi-border-strong); }
+.adi-day-item.is-apartado { border-style: dashed; }
+.adi-day-time { font-weight: 700; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.adi-day-main { display: flex; flex-direction: column; min-width: 0; }
+.adi-day-main strong { font-size: .875rem; }
+.adi-day-main small { color: var(--adi-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Franjas libres */
+.adi-free { padding: .75rem 0; border-top: 1px solid var(--adi-border); }
+.adi-free-name { display: flex; align-items: center; gap: .45rem; font-size: .8125rem; font-weight: 600; margin-bottom: .5rem; }
+.adi-free-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 6px; }
+.adi-free-slot {
+    display: flex;
+    flex-direction: column;
+    padding: .5rem .65rem;
+    border: 1px solid var(--adi-border);
+    border-radius: 8px;
+    font-size: .75rem;
+    color: var(--adi-ink-2);
+    text-decoration: none;
+    transition: border-color .12s ease, background .12s ease;
+}
+.adi-free-slot strong { font-size: .8125rem; color: var(--adi-ink); }
+.adi-free-price { margin-top: .2rem; color: var(--adi-accent); font-weight: 600; }
+.adi-free-slot:hover { border-color: var(--adi-accent); background: var(--adi-accent-soft); color: var(--adi-ink-2); }
+
+.adi-stats--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Leyenda debajo del calendario */
+.adi-cal-key {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.25rem 2.5rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--adi-border);
+    background: #fbfbf9;
+}
+.adi-cal-key .adi-legend-title { display: block; margin: 0 0 .65rem; }
+.adi-key-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: .6rem 1.25rem;
+}
+.adi-key-group:last-child .adi-key-list { grid-template-columns: 1fr; }
+.adi-key-list li { display: flex; align-items: flex-start; gap: .6rem; font-size: .8125rem; line-height: 1.35; }
+.adi-key-list li > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.adi-key-list strong { font-weight: 600; color: var(--adi-ink); }
+.adi-key-list small { color: var(--adi-muted); font-size: .75rem; }
+.adi-key-list li.is-off { opacity: .55; }
+.adi-key-swatch {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--esp) 22%, #fff);
+    box-shadow: inset 3px 0 0 var(--esp);
+}
+.adi-cal-key .adi-legend-chip { flex: none; font-size: .6875rem; font-variant-numeric: tabular-nums; margin-top: 1px; }
+@media (max-width: 767px) {
+    .adi-cal-key { grid-template-columns: 1fr; }
+}
