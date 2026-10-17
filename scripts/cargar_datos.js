@@ -126,6 +126,7 @@
       telefono: `${elegir(['2', '6', '7', '8'])}${entero(100, 999)}-${String(entero(0, 9999)).padStart(4, '0')}`,
       correo: `contacto${i + 1}@example.com`,
       notas: probabilidad(40) ? elegir(notasContacto) : '',
+      activo: true,
     });
   }
   insertar('contactos', docsContactos);
