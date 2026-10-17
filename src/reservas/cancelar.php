@@ -20,5 +20,5 @@ if ($id === null) {
 
 $baseDatos->selectCollection('reservas')->deleteOne(['_id' => $id]);
 
-header('Location: index.php?ok=cancelada');
+header('Location: ' . destinoReservas('ok=cancelada'));
 exit;
