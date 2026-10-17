@@ -1,9 +1,9 @@
-
 <?php
 
 // Cargar las variables de entorno del archivo .env
 $env = [];
-$envFile = dirname(__DIR__) . '/.env';
+// Desde src/includes/ la raíz del proyecto está dos niveles arriba
+$envFile = dirname(__DIR__, 2) . '/.env';
 
 if (is_readable($envFile)) {
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
@@ -24,7 +24,7 @@ if (empty($env['MONGODB_URI'])) {
 }
 
 // Cargar las dependencias de Composer
-$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+$autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 if (!file_exists($autoload)) {
     throw new RuntimeException('No se encontró vendor/autoload.php. Ejecutá composer install.');
