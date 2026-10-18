@@ -47,14 +47,17 @@ function e(mixed $valor): string
 
 /**
  * Cabecera común de todas las páginas.
- * $seccion marca el enlace activo: 'espacios', 'reservas' o 'contactos'.
+ * $seccion marca el enlace activo: 'espacios', 'reservas', 'actividades',
+ * 'ventas' o 'contactos'.
  */
 function encabezado(string $titulo, string $seccion = ''): void
 {
     $enlaces = [
-        'espacios'  => ['Espacios',  'src/espacios/index.php',  'alquileres'],
-        'reservas'  => ['Reservas',  'src/reservas/index.php',  'alquileres'],
-        'contactos' => ['Contactos', 'src/contactos/index.php', 'contactos'],
+        'espacios'    => ['Espacios',    'src/espacios/index.php',    'alquileres'],
+        'reservas'    => ['Reservas',    'src/reservas/index.php',    'alquileres'],
+        'actividades' => ['Actividades', 'src/actividades/index.php', 'ventas'],
+        'ventas'      => ['Ventas',      'src/ventas/index.php',      'ventas'],
+        'contactos'   => ['Contactos',   'src/contactos/index.php',   'contactos'],
     ];
     ?>
 <!doctype html>

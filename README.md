@@ -38,6 +38,10 @@ El sistema es de uso interno: no hay un portal público donde el vecino reserve 
 
 1. **Alquiler de espacios** — salón comunal y cancha, con tarifas por franja, calendario por espacio, apartados que vencen solos y cero dobles alquileres.
 2. **Ventas en actividades** — turnos, ferias y rifas, con números de rifa sin repetir y el total recaudado por actividad.
+   - Registro de actividades (turno, feria o rifa) con su fecha; al finalizarse dejan de aceptar ventas y su total queda cerrado.
+   - Registro de ventas en turnos y ferias con varios productos por venta (cantidad y precio); el total lo calcula el sistema y el comprador es opcional.
+   - Venta de los números 00 a 99 de cada rifa a un contacto, sobre una cuadrícula que muestra cuáles quedan libres.
+   - Total recaudado, cantidad de ventas y productos más vendidos por actividad, calculados con aggregation pipeline.
 3. **Contactos y relaciones** — registro de vecinos, comercios e instituciones, su historial (qué alquiló, qué compró, qué patrocinó) y recordatorios de seguimiento.
 
 ### Qué queda fuera
