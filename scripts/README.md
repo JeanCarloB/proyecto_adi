@@ -3,10 +3,12 @@
 ## Orden de ejecución
 
 1. `crear_colecciones.js` crea las colecciones `espacios` y `reservas` con su validación JSON Schema y sus índices. No inserta datos y se puede correr las veces que haga falta.
+   `crear_colecciones_ventas.js` hace lo mismo para `actividades`, `ventas` y `rifas`: JSON Schema, índice único `{rifa_id, numero}` (un número de rifa no se vende dos veces) e índice `{actividad_id, fecha}`. También es idempotente y acepta los datos de los dos scripts de carga.
 2. `cargar_datos.js` (mongosh) o `cargar_datos.php` (PHP) llenan la base con datos sintéticos. Solo hace falta uno de los dos.
 
 ```bash
 mongosh "<URI personal de Atlas>" --file scripts/crear_colecciones.js
+mongosh "<URI personal de Atlas>" --file scripts/crear_colecciones_ventas.js
 mongosh "<URI personal de Atlas>/adi_prueba" --file scripts/cargar_datos.js
 ```
 
