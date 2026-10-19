@@ -63,3 +63,13 @@ load("scripts/cargar_datos.js")
 | `INDICES` | `true` crea los índices del diagrama si no existen. Por defecto `true` |
 
 A diferencia del PHP, `LIMPIAR` está activado por defecto: si no se cambia, el script borra los datos de la base de la conexión antes de cargar. Revise que la URI apunte a `adi_prueba` y no a `adi`. Con `LIMPIAR = false`, el script se detiene si alguna colección ya tiene datos.
+
+## medir_indices.js
+
+Mide con `explain("executionStats")` las consultas clave con y sin índice: total recaudado por actividad, ventas de una actividad en un día, disponibilidad de una reserva y número de rifa vendido. Cada caso corre 3 veces y se reporta la mediana. "Sin índice" se fuerza con `hint({$natural: 1})`, así que el script **no crea ni borra índices ni modifica datos**.
+
+```bash
+mongosh "<URI personal de Atlas>/adi_prueba" --file scripts/medir_indices.js
+```
+
+Necesita datos cargados y los índices del diagrama. Al final imprime una tabla en Markdown para pegar en [`docs/mediciones.md`](../docs/mediciones.md). Para cambiar la cantidad de corridas: `CORRIDAS = 5; load("scripts/medir_indices.js")`.
