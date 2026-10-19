@@ -10,6 +10,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - `docs/mediciones.md`, `docs/pruebas.md` y `docs/instalacion.md` (#49, #50, #51).
 - Procedimiento de despliegue del servidor en el README (#47).
 - Este `CHANGELOG.md` (#46).
+- Portada en `index.php` con el resumen de cada módulo y enlaces a sus pantallas (#45).
+
+### Cambiado
+- La verificación del entorno pasa de `index.php` a `diagnostico.php`, y vuelve a mostrar las 6 comprobaciones (el `index.php` de `main` terminaba en un mensaje de prueba).
 
 ## [0.2.0] - Seguimiento 2
 

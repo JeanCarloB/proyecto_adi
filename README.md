@@ -134,7 +134,7 @@ Variables de entorno (`.env.example`):
 | `MONGODB_URI` | Cadena de conexión del clúster de Atlas. **Nunca se sube al repositorio.** |
 | `MONGODB_DB` | Nombre de la base de datos (`adi`). |
 
-Verificación: abrir `index.php` en el navegador. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK.
+Verificación: abrir `diagnostico.php` en el navegador. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK.
 
 **Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`.
 
@@ -155,7 +155,8 @@ Verificación: abrir `index.php` en el navegador. Las seis comprobaciones (PHP, 
 ├── .env.example            Variables de entorno (sin credenciales)
 ├── .htaccess               Bloqueo web de archivos sensibles
 ├── composer.json           Dependencias PHP
-└── index.php               Verificación de entorno y conexión
+├── diagnostico.php         Verificación de entorno y conexión
+└── index.php               Portada con acceso a los módulos
 ```
 
 ## 8. Flujo de trabajo
@@ -205,7 +206,7 @@ git pull --ff-only origin main
 composer install --no-dev               # solo si cambió composer.lock
 ```
 
-Luego abrir `index.php` y confirmar que las 6 verificaciones siguen en OK. Si `git pull --ff-only` falla, es porque alguien editó archivos en el servidor: revisar con `git status` y descartar esos cambios, nunca hacer commit desde el servidor.
+Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK. Si `git pull --ff-only` falla, es porque alguien editó archivos en el servidor: revisar con `git status` y descartar esos cambios, nunca hacer commit desde el servidor.
 
 ## 9. Equipo
 

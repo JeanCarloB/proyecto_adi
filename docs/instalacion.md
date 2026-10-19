@@ -66,12 +66,13 @@ mongosh "<URI>/adi_prueba" --file scripts/cargar_datos.js
 
 ## 5. Verificación
 
-1. Abrir `http://localhost/proyecto_adi/` (o la URL del servidor).
-2. Las 6 verificaciones de `index.php` deben salir en **OK**: PHP, extensión `mongodb`, `vendor/autoload.php`, `.env`, conexión y escritura.
-3. Entrar a contactos, alquileres y ventas y crear un registro en cada módulo.
+1. Abrir `http://localhost/proyecto_adi/diagnostico.php` (o la misma ruta en el servidor).
+2. Las 6 verificaciones deben salir en **OK**: PHP, extensión `mongodb`, `vendor/autoload.php`, `.env`, conexión y escritura.
+3. Abrir la portada `http://localhost/proyecto_adi/`, entrar a contactos, alquileres y ventas y crear un registro en cada módulo.
 
 | Síntoma | Causa probable |
 | --- | --- |
+| La portada dice "No se pudo conectar con la base de datos" | Ver `diagnostico.php` para saber qué falla |
 | "Extensión mongodb" en Falla | DLL que no corresponde a la versión de PHP, o falta `extension=mongodb` |
 | "vendor/autoload.php" en Falla | Falta `composer install` |
 | `composer install` falla con "zip extension ... missing" | Falta `extension=zip` en `php.ini` |

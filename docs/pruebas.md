@@ -12,11 +12,11 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 
 ## P1 · Caso normal: flujo completo
 
-**Preparación:** colecciones creadas con `scripts/crear_colecciones*.js` y `index.php` con las 6 verificaciones en OK.
+**Preparación:** colecciones creadas con `scripts/crear_colecciones*.js` y `diagnostico.php` con las 6 verificaciones en OK.
 
 **Pasos y resultado esperado:**
 
-1. Abrir `index.php`: las 6 verificaciones salen en **OK** y se listan las colecciones.
+1. Abrir `diagnostico.php`: las 6 verificaciones salen en **OK** y se listan las colecciones. Abrir la portada (`index.php`): muestra el resumen de los tres módulos con enlaces a cada uno.
 2. **Contactos:** crear un contacto de tipo vecino, editar su teléfono y verlo en el listado.
 3. **Alquileres:** crear una reserva (apartado) del salón para una fecha libre; aparece con estado *apartado*. Confirmar el pago: pasa a *confirmado* y ya no tiene `vence`.
 4. **Ventas:** crear una actividad tipo feria, registrar una venta con dos productos; el total de la venta es la suma de cantidad × precio y el total recaudado de la actividad aumenta.
@@ -31,12 +31,12 @@ Comprueba que la aplicación falla de forma controlada, sin mostrar la URI ni la
 **Variante A · URI incorrecta** (en una copia local, nunca en el `.env` del servidor):
 
 1. En `.env`, cambiar la contraseña de `MONGODB_URI` por una incorrecta.
-2. Abrir `index.php`.
-3. **Esperado:** "Conexión a MongoDB Atlas" y "Escritura en la base" en **Falla**, con un mensaje de autenticación; la página no se cae.
+2. Abrir `diagnostico.php`.
+3. **Esperado:** "Conexión a MongoDB Atlas" y "Escritura en la base" en **Falla**, con un mensaje de autenticación; la página no se cae. La portada (`index.php`) muestra "No se pudo conectar con la base de datos" sin detalles de la URI.
 4. Abrir un módulo (por ejemplo `src/contactos/`). **Esperado:** mensaje de error, no una pantalla en blanco ni la URI.
 5. Restaurar el `.env`.
 
-**Variante B · IP no autorizada:** desde una red cuya IP no está en Network Access de Atlas, abrir `index.php`. **Esperado:** "Conexión" en **Falla** a los 5 s (`serverSelectionTimeoutMS`) con un error de selección de servidor.
+**Variante B · IP no autorizada:** desde una red cuya IP no está en Network Access de Atlas, abrir `diagnostico.php`. **Esperado:** "Conexión" en **Falla** a los 5 s (`serverSelectionTimeoutMS`) con un error de selección de servidor.
 
 **Variante C · sin `.env`:** renombrar `.env` a `.env.bak`. **Esperado:** "Archivo .env con MONGODB_URI" en **Falla**.
 
