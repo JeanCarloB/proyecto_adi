@@ -115,7 +115,7 @@ Cada regla del negocio la garantiza la base de datos:
 
 ## 6. Instalación
 
-> Aquí va el resumen. La guía completa paso a paso (GitHub, Atlas y servidor Virtualmin) se publica en `docs/instalacion.md` en el Seguimiento 4, cuando se pruebe la instalación desde cero.
+> Aquí va el resumen. La guía completa paso a paso (requisitos, XAMPP, Atlas, scripts y solución de problemas) está en [`docs/instalacion.md`](docs/instalacion.md) y se valida en el Seguimiento 4 con una instalación desde cero.
 
 **Requisitos:** PHP ≥ 8.1 con la extensión `mongodb` 2.x, Composer, Git y un clúster de MongoDB Atlas.
 
@@ -134,7 +134,7 @@ Variables de entorno (`.env.example`):
 | `MONGODB_URI` | Cadena de conexión del clúster de Atlas. **Nunca se sube al repositorio.** |
 | `MONGODB_DB` | Nombre de la base de datos (`adi`). |
 
-Verificación: abrir `index.php` en el navegador. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK.
+Verificación: abrir `diagnostico.php` en el navegador. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK.
 
 **Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`.
 
@@ -145,13 +145,18 @@ Verificación: abrir `index.php` en el navegador. Las seis comprobaciones (PHP, 
 ├── src/                    Código de la aplicación
 ├── docs/
 │   ├── arquitectura/       Diagramas de arquitectura y modelo de datos
-│   └── seguimientos/       Bitácoras S1.md a S4.md
+│   ├── seguimientos/       Bitácoras S1.md a S4.md
+│   ├── instalacion.md      Instalación desde cero
+│   ├── mediciones.md       Mediciones con y sin índice (explain)
+│   └── pruebas.md          Pruebas documentadas
 ├── data/                   Datos de prueba
 ├── scripts/                Carga de datos sintéticos y mediciones
+├── CHANGELOG.md            Cambios por versión
 ├── .env.example            Variables de entorno (sin credenciales)
 ├── .htaccess               Bloqueo web de archivos sensibles
 ├── composer.json           Dependencias PHP
-└── index.php               Verificación de entorno y conexión
+├── diagnostico.php         Verificación de entorno y conexión
+└── index.php               Portada con acceso a los módulos
 ```
 
 ## 8. Flujo de trabajo
@@ -172,6 +177,37 @@ Después: pull request hacia `main`, revisión de otro integrante y merge. Quien
 
 **Reglas:** nunca se editan archivos directamente en el servidor, el `.env` del servidor no se toca con `git pull`, y las URIs personales de Atlas no se comparten en Issues ni en el repositorio.
 
+### Despliegue en el servidor
+
+El servidor Virtualmin (`grupo4.crnube.net/clientes2/proyecto`) tiene un clon del repositorio que **solo puede leer**: se conecta a GitHub con una *deploy key* de solo lectura, así que desde el servidor nunca se hace push.
+
+**Configuración inicial (una sola vez):**
+
+1. En el servidor, generar la llave: `ssh-keygen -t ed25519 -C "servidor-adi" -f ~/.ssh/adi_deploy`.
+2. En GitHub → *Settings → Deploy keys → Add deploy key*, pegar `~/.ssh/adi_deploy.pub` **sin** marcar *Allow write access*.
+3. En `~/.ssh/config` del servidor:
+   ```
+   Host github-adi
+     HostName github.com
+     User git
+     IdentityFile ~/.ssh/adi_deploy
+   ```
+4. Clonar en la carpeta pública del proyecto: `git clone git@github-adi:JeanCarloB/proyecto_adi.git proyecto`.
+5. Crear el `.env` del servidor a partir de `.env.example`, con el usuario de Atlas de la aplicación. Este archivo no está en el repositorio y `git pull` no lo toca.
+6. `composer install --no-dev`.
+7. En Atlas, *Network Access* solo con la IP del servidor.
+8. El `.htaccess` del repositorio bloquea `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`. Comprobar que `https://grupo4.crnube.net/clientes2/proyecto/.env` devuelve 403 o 404.
+
+**Después de cada merge a `main`** (lo hace quien fusionó el PR):
+
+```bash
+cd ~/public_html/clientes2/proyecto     # carpeta del clon en el servidor
+git pull --ff-only origin main
+composer install --no-dev               # solo si cambió composer.lock
+```
+
+Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK. Si `git pull --ff-only` falla, es porque alguien editó archivos en el servidor: revisar con `git status` y descartar esos cambios, nunca hacer commit desde el servidor.
+
 ## 9. Equipo
 
 | Integrante | Módulo | Responsabilidad |
@@ -185,12 +221,12 @@ Después: pull request hacia `main`, revisión de otro integrante y merge. Quien
 
 | Seguimiento | Semana | Entregable | Estado |
 | --- | --- | --- | --- |
-| S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | En curso |
-| S2 | 14 | Núcleo funcional · `v0.2.0` | Pendiente |
+| S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | Entregado |
+| S2 | 14 | Núcleo funcional · `v0.2.0` | En curso |
 | S3 | 15 | Integración, pruebas y medición · `v0.3.0` | Pendiente |
 | S4 | 16 | Release candidate · `v0.9.0` | Pendiente |
 
-Las bitácoras de cada seguimiento están en `docs/seguimientos/`.
+Las bitácoras de cada seguimiento están en `docs/seguimientos/` y los cambios por versión en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 11. Roadmap
 
