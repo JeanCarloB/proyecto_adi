@@ -222,7 +222,7 @@ Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK.
 | Seguimiento | Semana | Entregable | Estado |
 | --- | --- | --- | --- |
 | S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | Entregado |
-| S2 | 14 | Núcleo funcional · `v0.2.0` | En curso |
+| S2 | 14 | Núcleo funcional · `v0.2.0` | Entregado (parcial: seguimientos de contactos pasan al S3) |
 | S3 | 15 | Integración, pruebas y medición · `v0.3.0` | Pendiente |
 | S4 | 16 | Release candidate · `v0.9.0` | Pendiente |
 
