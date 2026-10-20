@@ -1,12 +1,30 @@
-
 <?php
 require_once dirname(__DIR__) . '/includes/seguimientos.php';
 
 $coleccionSeguimientos = $baseDatos->selectCollection('seguimientos');
 $coleccionContactos = $baseDatos->selectCollection('contactos');
 
+$filtroEstado = $_GET['estado'] ?? 'todos';
+
+if (!in_array($filtroEstado, ['todos', 'pendiente', 'completado'], true)) {
+    $filtroEstado = 'todos';
+}
+
+$filtroMongo = [];
+
+if ($filtroEstado !== 'todos') {
+    if ($filtroEstado === 'pendiente') {
+        $filtroMongo['$or'] = [
+            ['estado' => 'pendiente'],
+            ['estado' => ['$exists' => false]],
+        ];
+    } else {
+        $filtroMongo['estado'] = $filtroEstado;
+    }
+}
+
 $seguimientos = $coleccionSeguimientos
-    ->find([], ['sort' => ['fecha_creacion' => -1]])
+    ->find($filtroMongo, ['sort' => ['fecha_creacion' => -1]])
     ->toArray();
 
 $contactos = $coleccionContactos
@@ -65,9 +83,36 @@ if (($_GET['ok'] ?? '') === 'error') {
 <?php else: ?>
     <div class="adi-card">
         <div class="adi-table-meta">
-            <span><?= count($seguimientos) ?> <?= count($seguimientos) === 1 ? 'seguimiento' : 'seguimientos' ?></span>
-            <span>Ordenados por fecha de creación</span>
-        </div>
+    <span>
+        <?= count($seguimientos) ?>
+        <?= count($seguimientos) === 1 ? 'seguimiento' : 'seguimientos' ?>
+        <?= $filtroEstado !== 'todos'
+            ? ' · ' . e(ESTADOS_SEGUIMIENTO[$filtroEstado])
+            : '' ?>
+    </span>
+    <span>Ordenados por fecha de creación</span>
+</div>
+
+<form method="GET" action="index.php" class="row g-2 align-items-end mb-3">
+    <div class="col-sm-6 col-md-4">
+        <label for="estado" class="form-label">Filtrar por estado</label>
+        <select name="estado" id="estado" class="form-select">
+            <option value="todos" <?= $filtroEstado === 'todos' ? 'selected' : '' ?>>
+                Todos los seguimientos
+            </option>
+            <option value="pendiente" <?= $filtroEstado === 'pendiente' ? 'selected' : '' ?>>
+                Solo pendientes
+            </option>
+            <option value="completado" <?= $filtroEstado === 'completado' ? 'selected' : '' ?>>
+                Solo completados
+            </option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn adi-btn-primary">Filtrar</button>
+        <a href="index.php" class="btn adi-btn-ghost">Limpiar</a>
+    </div>
+</form>
 
         <div class="table-responsive">
             <table class="table table-hover adi-table">
