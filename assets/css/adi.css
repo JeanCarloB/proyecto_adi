@@ -1042,3 +1042,22 @@ button.adi-rifa-num:focus-visible { outline: 2px solid var(--adi-mod-ventas); ou
 @media (max-width: 767px) {
     .adi-stats--3 { grid-template-columns: 1fr; }
 }
+
+/* --- Paginación (paginador() en layout.php) ------------------------------ */
+.adi-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
+    border-top: 1px solid var(--adi-border);
+    font-size: .8125rem;
+    color: var(--adi-muted);
+}
+.adi-pager-nav { display: flex; align-items: center; gap: .5rem; }
+.adi-pager-info { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; font-variant-numeric: tabular-nums; }
+.adi-pager-field { display: inline-flex; align-items: center; gap: .4rem; margin: 0; color: var(--adi-ink-2); white-space: nowrap; }
+.adi-pager-field .form-control { width: 4rem; height: 31px; padding: .2rem .4rem; text-align: center; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.adi-pager-nav { flex-wrap: wrap; }
+.adi-pager .disabled { opacity: .45; pointer-events: none; }

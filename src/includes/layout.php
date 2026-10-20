@@ -165,3 +165,82 @@ function listaErrores(array $errores): void
     }
     echo '</div></div>';
 }
+
+/** Mínimo y máximo de filas por página que se pueden pedir con ?por= */
+const POR_PAGINA_MIN = 5;
+const POR_PAGINA_MAX = 100;
+
+/**
+ * Cantidad de filas por página que pidió el usuario (?por=), dentro de los límites.
+ * Uso: $porPagina = leerPorPagina(15);
+ */
+function leerPorPagina(int $defecto = 15): int
+{
+    $por = (int) ($_GET['por'] ?? $defecto);
+    return min(max($por, POR_PAGINA_MIN), POR_PAGINA_MAX);
+}
+
+/**
+ * Paginación debajo de una lista: Anterior / Siguiente, ir a una página exacta
+ * y elegir cuántas filas mostrar. Conserva los filtros de la URL.
+ *
+ * Uso: paginador($pagina, $paginas, $total, $porPagina);
+ */
+function paginador(int $pagina, int $paginas, int $total, int $porPagina): void
+{
+    if ($total <= POR_PAGINA_MIN) {
+        return;   // cabe todo en una página mínima: no hace falta paginar
+    }
+
+    // Filtros actuales de la URL (sin la página, la cantidad ni los avisos)
+    $otros = $_GET;
+    unset($otros['pagina'], $otros['por'], $otros['ok'], $otros['error']);
+
+    $url = fn (int $n): string => '?' . http_build_query($otros + ['por' => $porPagina, 'pagina' => $n]);
+
+    $desde = ($pagina - 1) * $porPagina + 1;
+    $hasta = min($pagina * $porPagina, $total);
+    ?>
+    <form method="GET" class="adi-pager" aria-label="Paginación">
+        <?php foreach ($otros as $clave => $valor): if (is_string($valor)): ?>
+            <input type="hidden" name="<?= e($clave) ?>" value="<?= e($valor) ?>">
+        <?php endif; endforeach; ?>
+
+        <div class="adi-pager-info">
+            <span><?= number_format($desde, 0, ',', '.') ?>–<?= number_format($hasta, 0, ',', '.') ?>
+                de <?= number_format($total, 0, ',', '.') ?></span>
+            <label class="adi-pager-field">
+                Mostrar
+                <input type="number" name="por" value="<?= $porPagina ?>"
+                       min="<?= POR_PAGINA_MIN ?>" max="<?= POR_PAGINA_MAX ?>"
+                       class="form-control form-control-sm"
+                       onchange="this.form.pagina.value = 1; this.form.submit();"
+                       aria-label="Filas por página">
+                por página
+            </label>
+        </div>
+
+        <div class="adi-pager-nav">
+            <?php if ($pagina > 1): ?>
+                <a class="btn btn-sm adi-btn-ghost" href="<?= e($url($pagina - 1)) ?>" rel="prev">‹ Anterior</a>
+            <?php else: ?>
+                <span class="btn btn-sm adi-btn-ghost disabled" aria-disabled="true">‹ Anterior</span>
+            <?php endif; ?>
+
+            <label class="adi-pager-field">
+                Página
+                <input type="number" name="pagina" value="<?= $pagina ?>" min="1" max="<?= $paginas ?>"
+                       class="form-control form-control-sm" aria-label="Ir a la página">
+                de <?= $paginas ?>
+            </label>
+            <button type="submit" class="btn btn-sm adi-btn-soft">Ir</button>
+
+            <?php if ($pagina < $paginas): ?>
+                <a class="btn btn-sm adi-btn-ghost" href="<?= e($url($pagina + 1)) ?>" rel="next">Siguiente ›</a>
+            <?php else: ?>
+                <span class="btn btn-sm adi-btn-ghost disabled" aria-disabled="true">Siguiente ›</span>
+            <?php endif; ?>
+        </div>
+    </form>
+    <?php
+}
