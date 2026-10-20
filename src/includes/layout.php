@@ -59,6 +59,7 @@ function encabezado(string $titulo, string $seccion = ''): void
         'actividades' => ['Actividades', 'src/actividades/index.php',   'ventas'],
         'ventas'      => ['Ventas',      'src/ventas/index.php',        'ventas'],
         'contactos'   => ['Contactos',   'src/contactos/index.php',     'contactos'],
+        'seguimientos' => ['Seguimientos', 'src/seguimientos/index.php', 'contactos'],
     ];
     ?>
 <!doctype html>

@@ -53,7 +53,7 @@ $modulos = [
             'Contactos activos'        => $resumen['contactos'],
             'Seguimientos pendientes'  => $resumen['pendientes'],
         ] : [],
-        'enlaces' => ['Contactos' => 'src/contactos/index.php'],
+        'enlaces' => ['Contactos' => 'src/contactos/index.php', 'Seguimientos' => 'src/seguimientos/index.php'],
     ],
 ];
 
