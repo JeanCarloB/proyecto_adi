@@ -20,7 +20,8 @@ $coleccion = $baseDatos->selectCollection('contactos');
 $resultado = $coleccion->updateOne(
     [
         '_id' => new ObjectId($id),
-        'activo' => true
+        // Sin el campo "activo" el contacto cuenta como activo (igual que en index.php).
+        'activo' => ['$ne' => false]
     ],
     [
         '$set' => ['activo' => false]
