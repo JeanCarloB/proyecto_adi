@@ -9,7 +9,6 @@ require_once dirname(__DIR__) . '/includes/alquileres.php';
 
 use MongoDB\BSON\ObjectId;
 
-const LIMITE = 200;
 
 // --- Filtros ----------------------------------------------------------------
 
@@ -41,15 +40,41 @@ if (in_array($fEstado, ['apartado', 'confirmado'], true)) {
 
 // --- Consulta ---------------------------------------------------------------
 
-$reservas = $baseDatos->selectCollection('reservas')
-    ->find($filtro, ['sort' => ['fecha' => 1], 'limit' => LIMITE])
-    ->toArray();
+// Un arreglo vacío de PHP se envía a MongoDB como lista, no como documento,
+// y $match lo rechaza. Con (object) siempre viaja como documento ({} = sin filtro).
+$matchFiltro = (object) $filtro;
 
-// Dentro del mismo día, ordenar mañana → tarde → noche
-$orden = array_flip(array_keys(FRANJAS));
-usort($reservas, fn ($a, $b) =>
-    [(int) (string) $a['fecha'], $orden[$a['franja']] ?? 9]
-    <=> [(int) (string) $b['fecha'], $orden[$b['franja']] ?? 9]);
+// Resumen con aggregation pipeline: cuántas reservas hay por estado y cuánto suman.
+// Se calcula sobre todo el filtro, no solo sobre las filas que se muestran.
+$resumen = ['apartado' => ['n' => 0, 'monto' => 0.0], 'confirmado' => ['n' => 0, 'monto' => 0.0]];
+$pipeline = [
+    ['$match' => $matchFiltro],
+    ['$group' => ['_id' => '$estado', 'n' => ['$sum' => 1], 'monto' => ['$sum' => '$monto']]],
+];
+foreach ($baseDatos->selectCollection('reservas')->aggregate($pipeline) as $g) {
+    if (isset($resumen[$g['_id']])) {
+        $resumen[$g['_id']] = ['n' => $g['n'], 'monto' => (float) (string) $g['monto']];
+    }
+}
+$total = $resumen['apartado']['n'] + $resumen['confirmado']['n'];
+
+// --- Paginación -------------------------------------------------------------
+
+$porPagina = leerPorPagina(15);
+$paginas   = max(1, (int) ceil($total / $porPagina));
+$pagina   = min(max(1, (int) ($_GET['pagina'] ?? 1)), $paginas);
+
+// Orden: fecha, luego mañana → tarde → noche. La franja es texto y en orden
+// alfabético quedaría mañana, noche, tarde; por eso se calcula su posición
+// con $indexOfArray. Así el orden es correcto también entre una página y otra.
+// $skip y $limit traen solo las filas de la página actual.
+$reservas = $baseDatos->selectCollection('reservas')->aggregate([
+    ['$match' => $matchFiltro],
+    ['$addFields' => ['ordenFranja' => ['$indexOfArray' => [array_keys(FRANJAS), '$franja']]]],
+    ['$sort' => ['fecha' => 1, 'ordenFranja' => 1, '_id' => 1]],
+    ['$skip' => ($pagina - 1) * $porPagina],
+    ['$limit' => $porPagina],
+])->toArray();
 
 // Nombres de espacios y contactos. Las reservas guardan solo referencias.
 $espacios = [];
@@ -71,20 +96,6 @@ if ($idsContacto) {
     }
 }
 
-// Resumen con aggregation pipeline: cuántas reservas hay por estado y cuánto suman.
-// Se calcula sobre todo el filtro, no solo sobre las filas que se muestran.
-$resumen = ['apartado' => ['n' => 0, 'monto' => 0.0], 'confirmado' => ['n' => 0, 'monto' => 0.0]];
-$pipeline = [
-    ['$match' => $filtro],
-    ['$group' => ['_id' => '$estado', 'n' => ['$sum' => 1], 'monto' => ['$sum' => '$monto']]],
-];
-foreach ($baseDatos->selectCollection('reservas')->aggregate($pipeline) as $g) {
-    if (isset($resumen[$g['_id']])) {
-        $resumen[$g['_id']] = ['n' => $g['n'], 'monto' => (float) (string) $g['monto']];
-    }
-}
-$total = $resumen['apartado']['n'] + $resumen['confirmado']['n'];
-
 encabezado('Reservas', 'reservas');
 
 tituloPagina(
@@ -97,6 +108,7 @@ avisoExito([
     'creada'     => 'Reserva apartada. Si no se confirma el pago en ' . HORAS_APARTADO . ' horas, vence sola.',
     'confirmada' => 'Pago confirmado. La reserva ya no vence.',
     'cancelada'  => 'La reserva se canceló y el horario quedó libre.',
+    'editada'    => 'Los cambios de la reserva se guardaron.',
 ]);
 if (($_GET['error'] ?? '') === 'confirmar') {
     aviso('warn', 'No se pudo confirmar: la reserva ya estaba confirmada o el apartado venció.');
@@ -162,11 +174,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
         </div>
     <?php else: ?>
         <div class="adi-table-meta">
-            <span>
-                <?= count($reservas) === LIMITE
-                    ? 'Mostrando las primeras ' . LIMITE . ' de ' . number_format($total, 0, ',', '.')
-                    : count($reservas) . ' ' . (count($reservas) === 1 ? 'reserva' : 'reservas') ?>
-            </span>
+            <span><?= number_format($total, 0, ',', '.') ?> <?= $total === 1 ? 'reserva' : 'reservas' ?></span>
             <span>Ordenadas por fecha</span>
         </div>
         <div class="table-responsive">
@@ -204,6 +212,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                             <?php endif; ?>
                         </td>
                         <td class="text-end text-nowrap">
+                            <a href="editar.php?id=<?= e($r['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($apartado): ?>
                                 <form action="confirmar.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Confirmar el pago de esta reserva?');">
@@ -222,6 +231,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                 </tbody>
             </table>
         </div>
+        <?php paginador($pagina, $paginas, $total, $porPagina); ?>
     <?php endif; ?>
 </div>
 <?php pie();

@@ -31,5 +31,5 @@ $resultado = $baseDatos->selectCollection('reservas')->updateOne(
     ]
 );
 
-header('Location: index.php?' . ($resultado->getModifiedCount() === 1 ? 'ok=confirmada' : 'error=confirmar'));
+header('Location: ' . destinoReservas($resultado->getModifiedCount() === 1 ? 'ok=confirmada' : 'error=confirmar'));
 exit;

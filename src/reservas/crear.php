@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'monto'       => $monto,
                 'vence'       => $vence,
             ]);
-            header('Location: index.php?ok=creada');
+            header('Location: ' . destinoReservas('ok=creada'));
             exit;
         } catch (Throwable $e) {
             $errores[] = match (codigoError($e)) {
@@ -88,10 +88,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Si se llegó desde el calendario, se vuelve a él (mismo mes y filtro)
+$volver = texto($_POST['volver'] ?? $_GET['volver'] ?? '') === 'calendario';
+$mesCal = texto($_POST['mes'] ?? $_GET['mes'] ?? '');
+$filtro = texto($_POST['filtro'] ?? $_GET['filtro'] ?? '');
+
 encabezado('Nueva reserva', 'reservas');
 ?>
 <div class="adi-form-narrow">
-    <a href="index.php" class="adi-sub text-decoration-none d-inline-block mb-3">← Reservas</a>
+    <?php if ($volver): ?>
+        <a href="<?= e(destinoReservas('')) ?>" class="adi-sub text-decoration-none d-inline-block mb-3">← Calendario</a>
+    <?php else: ?>
+        <a href="index.php" class="adi-sub text-decoration-none d-inline-block mb-3">← Reservas</a>
+    <?php endif; ?>
     <?php tituloPagina(
         'Nueva reserva',
         'Queda apartada por ' . HORAS_APARTADO . ' horas. Si no se confirma el pago, vence sola y el horario se libera.'
@@ -106,6 +115,11 @@ encabezado('Nueva reserva', 'reservas');
         </div>
     <?php else: ?>
     <form method="POST" class="adi-card adi-card-body">
+        <?php if ($volver): ?>
+            <input type="hidden" name="volver" value="calendario">
+            <input type="hidden" name="mes" value="<?= e($mesCal) ?>">
+            <input type="hidden" name="filtro" value="<?= e($filtro) ?>">
+        <?php endif; ?>
         <div class="mb-3">
             <label for="espacio" class="form-label">Espacio</label>
             <select class="form-select" id="espacio" name="espacio" required>
@@ -161,7 +175,7 @@ encabezado('Nueva reserva', 'reservas');
 
         <div class="d-flex gap-2">
             <button type="submit" class="btn adi-btn-primary">Apartar espacio</button>
-            <a href="index.php" class="btn adi-btn-ghost">Cancelar</a>
+            <a href="<?= e(destinoReservas('')) ?>" class="btn adi-btn-ghost">Cancelar</a>
         </div>
     </form>
     <?php endif; ?>
