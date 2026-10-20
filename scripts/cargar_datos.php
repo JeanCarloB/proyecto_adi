@@ -258,12 +258,19 @@ $notas = ['Llamar para confirmar patrocinio', 'Enviar recibo del alquiler', 'Inv
 $docs = [];
 for ($i = 0; $i < 300; $i++) {
     $fecha = entre($faker, $ahora->modify('-6 months'), $ahora->modify('+2 months'));
-    $docs[] = [
-        'contacto_id'        => $faker->randomElement($contactos),
-        'fecha_recordatorio' => fecha($fecha),
-        'nota'               => $faker->randomElement($notas),
-        'estado'             => $fecha < $ahora && $faker->boolean(80) ? 'hecho' : 'pendiente',
+    $doc = [
+        'contacto_id'    => $faker->randomElement($contactos),
+        'tipo'           => 'nota',
+        'descripcion'    => $faker->randomElement($notas),
+        'estado'         => $fecha < $ahora && $faker->boolean(80) ? 'completado' : 'pendiente',
+        'fecha_creacion' => fecha($fecha->modify('-' . $faker->numberBetween(1, 30) . ' days')),
     ];
+    // Los recordatorios llevan fecha de vencimiento; las notas no.
+    if ($faker->boolean(60)) {
+        $doc['tipo'] = 'recordatorio';
+        $doc['fecha_vencimiento'] = fecha($fecha);
+    }
+    $docs[] = $doc;
 }
 insertar($db, 'seguimientos', $docs);
 

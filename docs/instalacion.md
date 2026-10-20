@@ -56,6 +56,7 @@ Solo la primera vez (los scripts son idempotentes y no borran datos):
 ```bash
 mongosh "<URI>" --file scripts/crear_colecciones.js
 mongosh "<URI>" --file scripts/crear_colecciones_ventas.js
+mongosh "<URI>" --file scripts/crear_colecciones_contactos.js
 ```
 
 Datos de prueba, en una base aparte para no tocar los datos compartidos:

@@ -12,7 +12,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - **Ventas:** CRUD de actividades, registro, edición, anulación y listado de ventas por actividad, venta de números de rifa sin repetir y total recaudado con aggregation pipeline (PR #39; Issues #31, #32, #33, #34).
 - **Contactos:** CRUD de contactos desde la interfaz y desactivación de contactos (Issue #3; PR #26).
 - **Datos de prueba:** `scripts/cargar_datos.php` (Faker) y `scripts/cargar_datos.js` (mongosh) cargan datos sintéticos con semilla fija, incluidas 100 000 ventas (PR #1, #24, #25; Issue #44).
-- `scripts/crear_colecciones.js` y `scripts/crear_colecciones_ventas.js`: colecciones con JSON Schema e índices (PR #21, #39).
+- `scripts/crear_colecciones.js`, `scripts/crear_colecciones_ventas.js` y `scripts/crear_colecciones_contactos.js`: colecciones con JSON Schema e índices (PR #21, #39; Issue #2).
+- **Seguimientos:** CRUD de notas y recordatorios con filtro por estado (PR #65, #68; Issues #3, #4).
 - Diseño compartido de la interfaz (`src/includes/layout.php`, `assets/css/adi.css`) y logo.
 - **Alquileres:** calendario mensual de ocupación, edición de reservas y paginación de la lista (PR #23, #62; Issue #14).
 - Portada en `index.php` con el resumen de cada módulo y enlaces a sus pantallas (PR #52; Issue #45).

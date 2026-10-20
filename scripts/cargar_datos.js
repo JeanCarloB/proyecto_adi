@@ -244,12 +244,19 @@
   const docsSeguimientos = [];
   for (let i = 0; i < 300; i++) {
     const fecha = entre(new Date(ahora.getTime() - 182 * DIA), new Date(ahora.getTime() + 61 * DIA));
-    docsSeguimientos.push({
+    const doc = {
       contacto_id: elegir(contactos),
-      fecha_recordatorio: fecha,
-      nota: elegir(notas),
-      estado: fecha < ahora && probabilidad(80) ? 'hecho' : 'pendiente',
-    });
+      tipo: 'nota',
+      descripcion: elegir(notas),
+      estado: fecha < ahora && probabilidad(80) ? 'completado' : 'pendiente',
+      fecha_creacion: new Date(fecha.getTime() - entero(1, 30) * DIA),
+    };
+    // Los recordatorios llevan fecha de vencimiento; las notas no.
+    if (probabilidad(60)) {
+      doc.tipo = 'recordatorio';
+      doc.fecha_vencimiento = fecha;
+    }
+    docsSeguimientos.push(doc);
   }
   insertar('seguimientos', docsSeguimientos);
 

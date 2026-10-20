@@ -115,13 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'descripcion' => $descripcion,
                 'estado' => $estado,
             ],
-            '$unset' => [
-                'fecha_vencimiento' => '',
-            ],
         ];
 
+        // $set y $unset no pueden tocar el mismo campo en una actualización
         if ($fechaMongo !== null) {
             $actualizacion['$set']['fecha_vencimiento'] = $fechaMongo;
+        } else {
+            $actualizacion['$unset'] = ['fecha_vencimiento' => ''];
         }
 
         $coleccionSeguimientos->updateOne(
