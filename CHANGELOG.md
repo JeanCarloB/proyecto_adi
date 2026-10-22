@@ -5,6 +5,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ## [Sin publicar]
 
+### Agregado
+- **Seguridad:** inicio y cierre de sesión (`login.php`, `logout.php`) contra la colección `usuarios` con `password_verify`, y permisos por rol en `src/includes/sesion.php`: todas las páginas exigen sesión y solo el rol `admin` puede crear, editar, anular o borrar; el rol `comunidad` solo consulta.
+- `scripts/crear_usuarios_prueba.php`: usuarios ficticios `admin@example.com` y `comunidad@example.com` para probar el login.
+
 ## [0.2.0] - Seguimiento 2
 
 ### Agregado

@@ -33,6 +33,8 @@ function calcularRaiz(): string
 
 define('RAIZ', calcularRaiz());
 
+require_once __DIR__ . '/sesion.php';   // usuarioActual(), esAdmin(), requiereLogin(), requiereRol()
+
 /** Módulos del sistema: nombre para mostrar y color (sale del logo). */
 const MODULOS = [
     'alquileres' => 'Alquiler de espacios',
@@ -61,6 +63,7 @@ function encabezado(string $titulo, string $seccion = ''): void
         'contactos'   => ['Contactos',   'src/contactos/index.php',     'contactos'],
         'seguimientos' => ['Seguimientos', 'src/seguimientos/index.php', 'contactos'],
     ];
+    $usuario = usuarioActual();
     ?>
 <!doctype html>
 <html lang="es">
@@ -82,6 +85,7 @@ function encabezado(string $titulo, string $seccion = ''): void
             <span class="adi-wordmark"><b>ADI</b>ministra</span>
             <span class="adi-tagline">Gestión comunal</span>
         </a>
+        <?php if ($usuario): ?>
         <nav class="adi-nav" aria-label="Módulos">
             <?php foreach ($enlaces as $clave => [$texto, $ruta, $modulo]): ?>
                 <a href="<?= RAIZ . $ruta ?>" class="<?= $clave === $seccion ? 'is-active' : '' ?>"
@@ -90,6 +94,15 @@ function encabezado(string $titulo, string $seccion = ''): void
                 </a>
             <?php endforeach; ?>
         </nav>
+        <form action="<?= RAIZ ?>logout.php" method="POST" class="adi-user">
+            <?= campoCsrf() ?>
+            <span class="adi-user-name" title="<?= e($usuario['correo']) ?>">
+                <?= e($usuario['nombre']) ?>
+                <small><?= e(ROLES[$usuario['rol']] ?? $usuario['rol']) ?></small>
+            </span>
+            <button type="submit" class="btn btn-sm adi-btn-ghost">Salir</button>
+        </form>
+        <?php endif; ?>
     </div>
 </header>
 
@@ -109,6 +122,7 @@ function pie(): void
 /**
  * Encabezado de cada página: módulo, título, descripción y una acción opcional.
  * $accion = ['texto' => '...', 'url' => '...']
+ * La acción (crear algo) solo se muestra a administradores.
  */
 function tituloPagina(string $titulo, string $descripcion = '', ?array $accion = null, string $modulo = 'alquileres'): void
 {
@@ -123,7 +137,7 @@ function tituloPagina(string $titulo, string $descripcion = '', ?array $accion =
                 <p class="adi-lead"><?= e($descripcion) ?></p>
             <?php endif; ?>
         </div>
-        <?php if ($accion): ?>
+        <?php if ($accion && esAdmin()): ?>
             <a href="<?= e($accion['url']) ?>" class="btn adi-btn-primary text-nowrap"><?= e($accion['texto']) ?></a>
         <?php endif; ?>
     </div>

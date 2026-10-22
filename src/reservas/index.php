@@ -212,6 +212,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                             <?php endif; ?>
                         </td>
                         <td class="text-end text-nowrap">
+                            <?php if (esAdmin()): ?>
                             <a href="editar.php?id=<?= e($r['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($apartado): ?>
                                 <form action="confirmar.php" method="POST" class="d-inline"
@@ -225,6 +226,7 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                                 <input type="hidden" name="id" value="<?= e($r['_id']) ?>">
                                 <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Cancelar</button>
                             </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

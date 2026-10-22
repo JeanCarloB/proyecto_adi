@@ -6,6 +6,7 @@
  * vencido: el horario queda libre de inmediato para otra reserva.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

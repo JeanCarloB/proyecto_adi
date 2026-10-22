@@ -10,6 +10,8 @@
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/layout.php';   // RAIZ, e(), encabezado(), pie(), avisos
 
+requiereLogin();   // todas las páginas del módulo exigen sesión
+
 use MongoDB\BSON\Decimal128;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;

@@ -160,6 +160,7 @@ if (($_GET['ok'] ?? '') === 'error') {
                             </span>
                         </td>
                         <td class="text-end text-nowrap">
+                            <?php if (esAdmin()): ?>
                             <a href="editar.php?id=<?= urlencode((string) $seguimiento['_id']) ?>"
                                class="btn btn-sm adi-btn-ghost">Editar</a>
                             <form action="eliminar.php" method="POST" class="d-inline"
@@ -170,6 +171,7 @@ if (($_GET['ok'] ?? '') === 'error') {
                                     Eliminar
                                 </button>
                             </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

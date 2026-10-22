@@ -66,6 +66,21 @@ load("scripts/cargar_datos.js")
 
 A diferencia del PHP, `LIMPIAR` está activado por defecto: si no se cambia, el script borra los datos de la base de la conexión antes de cargar. Revise que la URI apunte a `adi_prueba` y no a `adi`. Con `LIMPIAR = false`, el script se detiene si alguna colección ya tiene datos.
 
+## crear_usuarios_prueba.php
+
+Crea (o actualiza) dos usuarios ficticios para probar el login y los permisos, con la contraseña guardada con `password_hash`, y el índice único sobre `correo`. Es idempotente.
+
+```bash
+php scripts/crear_usuarios_prueba.php      # usa MONGODB_URI y MONGODB_DB del .env
+```
+
+| Correo | Contraseña | Rol |
+|---|---|---|
+| `admin@example.com` | `Admin2026!` | `admin`: consulta, crea, edita, anula y borra |
+| `comunidad@example.com` | `Comunidad2026!` | `comunidad`: solo consulta |
+
+Son credenciales de prueba públicas: úselas en `adi_prueba` o en local, nunca como usuarios reales del servidor.
+
 ## medir_indices.js
 
 Mide con `explain("executionStats")` las consultas clave con y sin índice: total recaudado por actividad, ventas de una actividad en un día, disponibilidad de una reserva y número de rifa vendido. Cada caso corre 3 veces y se reporta la mediana. "Sin índice" se fuerza con `hint({$natural: 1})`, así que el script **no crea ni borra índices ni modifica datos**.

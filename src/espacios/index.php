@@ -61,6 +61,7 @@ avisoExito([
                     <?php endforeach; ?>
                 </ul>
 
+                <?php if (esAdmin()): ?>
                 <div class="adi-space-actions">
                     <a href="form.php?id=<?= e($espacio['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                     <?php if ($activo): ?>
@@ -78,6 +79,7 @@ avisoExito([
                         </button>
                     </form>
                 </div>
+                <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </div>

@@ -4,6 +4,7 @@
  * Sin ?id= crea una nueva; con ?id= edita la existente.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+requiereRol('admin');
 
 $coleccion = $baseDatos->selectCollection('actividades');
 

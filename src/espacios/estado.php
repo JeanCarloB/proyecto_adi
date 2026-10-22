@@ -4,6 +4,7 @@
  * Un espacio no se borra: se marca inactivo para conservar su historial de reservas.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

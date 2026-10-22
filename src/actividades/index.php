@@ -140,7 +140,9 @@ tituloPagina(
                             <a href="ver.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-soft">
                                 <?= aceptaVentas($a) ? ($esRifa ? 'Vender números' : 'Ver y vender') : 'Ver' ?>
                             </a>
-                            <a href="form.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
+                            <?php if (esAdmin()): ?>
+                                <a href="form.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

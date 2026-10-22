@@ -7,6 +7,8 @@
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/layout.php';
 
+requiereLogin();   // todas las páginas del módulo exigen sesión
+
 const TIPOS_SEGUIMIENTO = [
     'nota'         => 'Nota',
     'recordatorio' => 'Recordatorio',
