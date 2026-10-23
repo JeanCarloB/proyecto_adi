@@ -1,26 +1,29 @@
 <?php
 /**
- * Solicitud de reserva hecha por la comunidad (página pública).
+ * Solicitud de reserva hecha por una persona de la comunidad (con sesión).
  *
  * No crea una reserva: guarda una "solicitud" pendiente que la junta aprueba
  * o rechaza desde src/reservas/solicitudes.php. Así nadie puede ocupar un
  * horario sin que la junta lo revise.
  *
- * Protección contra bots y abusos, en capas:
- *   1. Captcha ALTCHA (prueba de trabajo, sin servicios externos).
- *   2. Índice único sobre el captcha: el mismo captcha resuelto no se puede reenviar.
- *   3. Índice único parcial {espacio_id, fecha, franja, correo} en pendientes:
+ * Protección contra abusos, en capas:
+ *   1. Exige iniciar sesión (y el login exige captcha ALTCHA).
+ *   2. Token CSRF: el formulario no se puede enviar desde otro sitio.
+ *   3. Índice único parcial {espacio_id, fecha, franja, usuario_id} en pendientes:
  *      una persona no puede repetir el mismo pedido.
- *   4. JSON Schema de la colección: formato del correo y largos máximos.
+ *   4. JSON Schema de la colección: tipos y largos máximos.
  *   5. TTL: lo que nadie atiende se borra solo a los DIAS_SOLICITUD días.
  */
 // Página pública: el control de acceso (login) no debe exigir sesión aquí.
 define('PAGINA_PUBLICA', true);
 
 require_once dirname(__DIR__) . '/includes/alquileres.php';
-require_once dirname(__DIR__) . '/includes/captcha.php';
 
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
+
+// Pedir una reserva exige cuenta. Sin sesión, login.php la pide y vuelve aquí.
+$usuario = requiereLogin();
 
 $espacios = array_filter(espaciosConColor($baseDatos), fn ($e) => $e['activo'] && $e['tarifas']);
 $hoy      = hoyLocal();
@@ -32,9 +35,7 @@ $enviada = false;
 $espacioId = texto($_POST['espacio'] ?? $_GET['espacio'] ?? '');
 $fecha     = texto($_POST['fecha']   ?? $_GET['fecha']   ?? '');
 $franja    = texto($_POST['franja']  ?? $_GET['franja']  ?? '');
-$nombre    = texto($_POST['nombre']   ?? '');
 $telefono  = texto($_POST['telefono'] ?? '');
-$correo    = mb_strtolower(texto($_POST['correo'] ?? ''));
 $mensaje   = texto($_POST['mensaje']  ?? '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -51,23 +52,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($fecha < $hoy || $fecha > $limite) {
         $errores[] = 'Se pueden pedir fechas desde hoy y hasta ' . DIAS_ADELANTE_SOLICITUD . ' días adelante.';
     }
-    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 80) {
-        $errores[] = 'Escribí tu nombre completo.';
-    }
-    if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || mb_strlen($correo) > 120) {
-        $errores[] = 'Escribí un correo válido: por ahí te contacta la junta.';
+    if (!csrfValido()) {
+        $errores[] = 'La página venció. Volvé a intentarlo.';
     }
     if ($telefono !== '' && !preg_match('/^[0-9 +()-]{8,20}$/', $telefono)) {
         $errores[] = 'El teléfono solo puede tener números, espacios y los signos + ( ) -.';
     }
     if (mb_strlen($mensaje) > 300) {
         $errores[] = 'El mensaje puede tener hasta 300 caracteres.';
-    }
-
-    // El captcha se revisa aunque haya otros errores, pero al final: si falla, se pide de nuevo.
-    $captcha = captchaVerificar($_POST['altcha'] ?? null);
-    if ($captcha === null) {
-        $errores[] = 'Confirmá que no sos un robot (la casilla "No soy un robot").';
     }
 
     // ¿Sigue libre? (si ya hay una reserva, no tiene sentido pedirlo)
@@ -82,12 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'espacio_id' => $espacio['id'],
             'fecha'      => $dia,
             'franja'     => $franja,
-            'nombre'     => $nombre,
-            'correo'     => $correo,
+            'usuario_id' => new ObjectId($usuario['id']),
+            'nombre'     => $usuario['nombre'],
+            'correo'     => mb_strtolower($usuario['correo']),
             'estado'     => 'pendiente',
             'creada'     => new UTCDateTime(),
             'expira'     => new UTCDateTime((time() + DIAS_SOLICITUD * 86400) * 1000),
-            'captcha'    => $captcha,
         ];
         if ($telefono !== '') {
             $documento['telefono'] = $telefono;
@@ -101,9 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $enviada = true;
         } catch (Throwable $e) {
             $errores[] = match (codigoError($e)) {
-                11000   => str_contains($e->getMessage(), 'captcha')
-                    ? 'Esa verificación ya se usó. Marcá de nuevo "No soy un robot".'
-                    : 'Ya tenés una solicitud pendiente para ese espacio, día y franja.',
+                11000   => 'Ya tenés una solicitud pendiente para ese espacio, día y franja.',
                 121     => 'Algún dato no tiene el formato correcto. Revisá el correo y los textos.',
                 default => 'No se pudo enviar la solicitud. Intentá de nuevo en un momento.',
             };
@@ -130,8 +120,8 @@ encabezadoPublico('Solicitar una reserva', 'solicitar');
                 Si en <?= DIAS_SOLICITUD ?> días nadie la atiende, vence sola.
             </p>
             <div class="d-flex gap-2 mt-4">
-                <a href="calendario.php" class="btn adi-btn-primary">Volver al calendario</a>
-                <a href="solicitar.php" class="btn adi-btn-ghost">Otra solicitud</a>
+                <a href="mis_solicitudes.php" class="btn adi-btn-primary">Ver mis solicitudes</a>
+                <a href="calendario.php" class="btn adi-btn-ghost">Volver al calendario</a>
             </div>
         </div>
     <?php else: ?>
@@ -146,6 +136,7 @@ encabezadoPublico('Solicitar una reserva', 'solicitar');
             <div class="adi-card adi-empty"><strong>Por ahora no hay espacios disponibles</strong></div>
         <?php else: ?>
         <form method="POST" class="adi-card adi-card-body" novalidate>
+            <?= campoCsrf() ?>
             <h2 class="adi-section-title">¿Qué necesitás?</h2>
             <div class="row g-3 mb-4">
                 <div class="col-12">
@@ -176,18 +167,13 @@ encabezadoPublico('Solicitar una reserva', 'solicitar');
             </div>
 
             <h2 class="adi-section-title">Tus datos</h2>
+            <div class="adi-account mb-3">
+                <strong><?= e($usuario['nombre']) ?></strong>
+                <span><?= e($usuario['correo']) ?></span>
+                <small>La junta te contacta a este correo. Sale de tu cuenta.</small>
+            </div>
             <div class="row g-3 mb-4">
-                <div class="col-12">
-                    <label for="nombre" class="form-label">Nombre completo</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" required
-                           minlength="3" maxlength="80" autocomplete="name" value="<?= e($nombre) ?>">
-                </div>
-                <div class="col-sm-7">
-                    <label for="correo" class="form-label">Correo</label>
-                    <input type="email" class="form-control" id="correo" name="correo" required
-                           maxlength="120" autocomplete="email" value="<?= e($correo) ?>">
-                </div>
-                <div class="col-sm-5">
+                <div class="col-sm-6">
                     <label for="telefono" class="form-label">Teléfono <span class="adi-sub">(opcional)</span></label>
                     <input type="tel" class="form-control" id="telefono" name="telefono"
                            maxlength="20" autocomplete="tel" value="<?= e($telefono) ?>">
@@ -203,8 +189,6 @@ encabezadoPublico('Solicitar una reserva', 'solicitar');
                 <span>Tarifa de referencia</span>
                 <strong id="monto">—</strong>
             </div>
-
-            <div class="mb-4"><?php captchaWidget(); ?></div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn adi-btn-primary">Enviar solicitud</button>

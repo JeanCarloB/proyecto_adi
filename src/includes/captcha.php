@@ -7,12 +7,16 @@
  * produzca cierto hash SHA-256). A una persona le toma un segundo; a un bot
  * que manda miles de formularios le sale caro. No usa cookies ni rastreo.
  *
+ * Se usa en el inicio de sesión (login.php) para frenar los ataques de fuerza
+ * bruta: un bot no puede probar miles de contraseñas sin resolver un reto por intento.
+ *
  * Flujo:
  *   1. captchaReto()      → el servidor genera el reto y lo firma con HMAC.
  *   2. <altcha-widget>    → el navegador lo resuelve y envía el campo "altcha".
- *   3. captchaVerificar() → el servidor revisa la firma, el vencimiento y la
- *                           solución. Devuelve el reto para guardarlo: el índice
- *                           único de solicitudes.captcha impide reutilizarlo.
+ *   3. captchaVerificar() → el servidor revisa la firma, el vencimiento y la solución.
+ *   4. captchaConsumir()  → guarda el reto en la colección captchas_usados. Su _id
+ *                           es el reto, así que reutilizarlo choca con el índice de
+ *                           _id (error 11000). Un índice TTL los borra al vencer.
  *
  * Necesita ALTCHA_HMAC_KEY en .env (una clave aleatoria de al menos 32 caracteres).
  * Widget: https://github.com/altcha-org/altcha (licencia MIT), versión 2.x.
@@ -31,6 +35,16 @@ function captchaClave(): string
 {
     global $env;
     $clave = $env['ALTCHA_HMAC_KEY'] ?? '';
+
+    // Si la página no cargó conexion.php (por ejemplo login.php antes de enviar
+    // el formulario), se lee la clave directamente del .env.
+    if ($clave === '' && is_readable($archivo = dirname(__DIR__, 2) . '/.env')) {
+        foreach (file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $linea) {
+            if (str_starts_with(trim($linea), 'ALTCHA_HMAC_KEY=')) {
+                $clave = trim(substr(trim($linea), strlen('ALTCHA_HMAC_KEY=')), " \t\"'");
+            }
+        }
+    }
     if (strlen($clave) < 32) {
         throw new RuntimeException('Falta ALTCHA_HMAC_KEY en .env (mínimo 32 caracteres). Vea .env.example.');
     }
@@ -121,4 +135,28 @@ function captchaWidget(): void
         strings="<?= e(json_encode($textos, JSON_UNESCAPED_UNICODE)) ?>"
         hidelogo></altcha-widget>
     <?php
+}
+
+/**
+ * Marca el reto como usado. Devuelve false si ya se había usado antes.
+ * Necesita la colección captchas_usados (scripts/crear_colecciones.js).
+ */
+function captchaConsumir(MongoDB\Database $baseDatos, string $reto): bool
+{
+    try {
+        $baseDatos->selectCollection('captchas_usados')->insertOne([
+            '_id'    => $reto,
+            'expira' => new MongoDB\BSON\UTCDateTime((time() + CAPTCHA_MINUTOS * 60) * 1000),
+        ]);
+        return true;
+    } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+        return false;   // 11000: el mismo captcha ya se había usado
+    }
+}
+
+/** Verifica y consume en un solo paso. */
+function captchaValido(MongoDB\Database $baseDatos, mixed $respuesta): bool
+{
+    $reto = captchaVerificar($respuesta);
+    return $reto !== null && captchaConsumir($baseDatos, $reto);
 }

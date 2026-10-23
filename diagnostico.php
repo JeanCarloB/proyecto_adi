@@ -70,7 +70,7 @@ $checks[] = ['Escritura en la base', $escritura];
 <body class="bg-light">
   <main class="container py-5" style="max-width: 640px">
     <h1 class="h3 mb-1">Sistema de gestión comunal</h1>
-    <p class="text-muted">ADI Santa Elena · verificación del entorno · <a href="index.php">ir al sistema</a></p>
+    <p class="text-muted">ADIministra· verificación del entorno · <a href="index.php">ir al sistema</a></p>
 
     <ul class="list-group mb-4">
       <?php foreach ($checks as [$label, $ok]): ?>
@@ -107,4 +107,4 @@ $checks[] = ['Escritura en la base', $escritura];
     <?php endif; ?>
   </main>
 </body>
-</html>
+</html>

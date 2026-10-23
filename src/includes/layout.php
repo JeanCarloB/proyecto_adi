@@ -33,6 +33,8 @@ function calcularRaiz(): string
 
 define('RAIZ', calcularRaiz());
 
+require_once __DIR__ . '/sesion.php';   // usuarioActual(), esAdmin(), requiereLogin(), requiereRol()
+
 /** Módulos del sistema: nombre para mostrar y color (sale del logo). */
 const MODULOS = [
     'alquileres' => 'Alquiler de espacios',
@@ -62,6 +64,14 @@ function encabezado(string $titulo, string $seccion = ''): void
         'contactos'   => ['Contactos',   'src/contactos/index.php',     'contactos'],
         'seguimientos' => ['Seguimientos', 'src/seguimientos/index.php', 'contactos'],
     ];
+    $usuario = usuarioActual();
+
+    // La comunidad no administra alquileres: en lugar de Espacios, Reservas,
+    // Calendario y Solicitudes ve su propia vista (calendario público y sus solicitudes).
+    if ($usuario && $usuario['rol'] !== 'admin') {
+        unset($enlaces['espacios'], $enlaces['reservas'], $enlaces['calendario'], $enlaces['solicitudes']);
+        $enlaces = ['publico' => ['Alquiler de espacios', 'src/publico/calendario.php', 'alquileres']] + $enlaces;
+    }
     ?>
 <!doctype html>
 <html lang="es">
@@ -83,6 +93,7 @@ function encabezado(string $titulo, string $seccion = ''): void
             <span class="adi-wordmark"><b>ADI</b>ministra</span>
             <span class="adi-tagline">Gestión comunal</span>
         </a>
+        <?php if ($usuario): ?>
         <nav class="adi-nav" aria-label="Módulos">
             <?php foreach ($enlaces as $clave => [$texto, $ruta, $modulo]): ?>
                 <a href="<?= RAIZ . $ruta ?>" class="<?= $clave === $seccion ? 'is-active' : '' ?>"
@@ -91,6 +102,15 @@ function encabezado(string $titulo, string $seccion = ''): void
                 </a>
             <?php endforeach; ?>
         </nav>
+        <form action="<?= RAIZ ?>logout.php" method="POST" class="adi-user">
+            <?= campoCsrf() ?>
+            <span class="adi-user-name" title="<?= e($usuario['correo']) ?>">
+                <?= e($usuario['nombre']) ?>
+                <small><?= e(ROLES[$usuario['rol']] ?? $usuario['rol']) ?></small>
+            </span>
+            <button type="submit" class="btn btn-sm adi-btn-ghost">Salir</button>
+        </form>
+        <?php endif; ?>
     </div>
 </header>
 
@@ -105,10 +125,14 @@ function encabezado(string $titulo, string $seccion = ''): void
  */
 function encabezadoPublico(string $titulo, string $seccion = ''): void
 {
+    $usuario = usuarioActual();
     $enlaces = [
         'calendario' => ['Calendario de espacios', 'src/publico/calendario.php'],
         'solicitar'  => ['Solicitar una reserva',  'src/publico/solicitar.php'],
     ];
+    if ($usuario) {
+        $enlaces['mis'] = ['Mis solicitudes', 'src/publico/mis_solicitudes.php'];
+    }
     ?>
 <!doctype html>
 <html lang="es">
@@ -135,8 +159,22 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
                 <a href="<?= RAIZ . $ruta ?>" class="<?= $clave === $seccion ? 'is-active' : '' ?>"
                    <?= $clave === $seccion ? 'aria-current="page"' : '' ?>><?= e($texto) ?></a>
             <?php endforeach; ?>
-            <a href="<?= RAIZ ?>index.php" class="adi-nav-admin">Junta directiva →</a>
         </nav>
+        <?php if ($usuario): ?>
+            <form action="<?= RAIZ ?>logout.php" method="POST" class="adi-user">
+                <?= campoCsrf() ?>
+                <?php if ($usuario['rol'] === 'admin'): ?>
+                    <a href="<?= RAIZ ?>index.php" class="adi-nav-admin">Panel de la junta →</a>
+                <?php endif; ?>
+                <span class="adi-user-name" title="<?= e($usuario['correo']) ?>">
+                    <?= e($usuario['nombre']) ?>
+                    <small><?= e(ROLES[$usuario['rol']] ?? $usuario['rol']) ?></small>
+                </span>
+                <button type="submit" class="btn btn-sm adi-btn-ghost">Salir</button>
+            </form>
+        <?php else: ?>
+            <a href="<?= RAIZ ?>login.php?volver=<?= e(urlencode($_SERVER['REQUEST_URI'] ?? '')) ?>" class="btn btn-sm adi-btn-soft">Iniciar sesión</a>
+        <?php endif; ?>
     </div>
 </header>
 

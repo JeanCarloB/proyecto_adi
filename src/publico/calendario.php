@@ -5,7 +5,7 @@
  * Solo muestra qué franjas están ocupadas. No muestra quién reservó, ni
  * teléfonos, ni montos cobrados, ni si el pago está confirmado: esos datos
  * son de la junta. Desde un día libre se puede pedir una reserva
- * (solicitar.php), que la junta aprueba o rechaza.
+ * (solicitar.php, exige sesión), que la junta aprueba o rechaza.
  *
  * Consulta: find() con proyección {_id: 0, espacio_id, fecha, franja}.
  * Los tres campos están en el índice único {espacio_id, fecha, franja},
@@ -222,7 +222,8 @@ tituloPagina(
             <h3 class="adi-legend-title">Cómo reservar</h3>
             <ul class="adi-key-list">
                 <li><span><strong>1. Elegí un día libre</strong><small>Las franjas que aparecen están ocupadas.</small></span></li>
-                <li><span><strong>2. Enviá la solicitud</strong><small>La junta la revisa y te contacta para confirmar y coordinar el pago.</small></span></li>
+                <li><span><strong>2. Iniciá sesión y enviá la solicitud</strong><small>Con la cuenta de comunidad que te dio la junta.</small></span></li>
+                <li><span><strong>3. La junta te confirma</strong><small>Revisá el estado en "Mis solicitudes". La junta te contacta para el pago.</small></span></li>
             </ul>
         </div>
     </footer>

@@ -1,5 +1,6 @@
 <?php
-require_once dirname(__DIR__) . '/includes/conexion.php';
+require_once dirname(__DIR__) . '/includes/contactos.php';
+requiereRol('admin');
 
 use MongoDB\BSON\ObjectId;
 

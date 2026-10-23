@@ -8,6 +8,7 @@
  * con el error 11000 y aquí se traduce a un mensaje claro.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 use MongoDB\BSON\UTCDateTime;
 

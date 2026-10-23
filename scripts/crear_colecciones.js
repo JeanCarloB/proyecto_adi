@@ -23,9 +23,12 @@
  *
  * Es idempotente: se puede correr las veces que haga falta.
  *
- * También crea "solicitudes": los pedidos de reserva que hace la comunidad
- * desde la página pública (protegidos con captcha). La junta los aprueba o
- * los rechaza; los que nadie atiende vencen solos a los DIAS_SOLICITUD días.
+ * También crea "solicitudes": los pedidos de reserva que hace una persona de la
+ * comunidad con su cuenta. La junta los aprueba o los rechaza; los que nadie
+ * atiende vencen solos a los DIAS_SOLICITUD días.
+ *
+ * Y "captchas_usados": los captcha ALTCHA ya resueltos en el login, para que
+ * cada uno sirva una sola vez (se borran solos al vencer).
  *
  * Issues: #7 (espacios), #8 (reservas), #9 (índice único), #10 (índice TTL).
  */
@@ -157,27 +160,28 @@ print("  TTL sobre vence: el apartado sin confirmar se elimina solo (el monitor 
 
 // --- solicitudes -----------------------------------------------------------
 //
-// Pedidos de la comunidad desde src/publico/solicitar.php. No son reservas:
+// Pedidos de la comunidad desde src/publico/solicitar.php (exige sesión). No son reservas:
 // no ocupan el horario hasta que la junta las aprueba. Así un bot o una
 // persona no puede bloquear la cancha con pedidos falsos.
 
 const esquemaSolicitudes = {
   bsonType: "object",
   title: "Solicitud de reserva hecha por la comunidad",
-  required: ["espacio_id", "fecha", "franja", "nombre", "correo", "estado", "creada", "captcha"],
+  required: ["espacio_id", "usuario_id", "fecha", "franja", "nombre", "correo", "estado", "creada"],
   additionalProperties: false,
   properties: {
     _id: { bsonType: "objectId" },
     espacio_id: { bsonType: "objectId", description: "Referencia a espacios" },
+    usuario_id: { bsonType: "objectId", description: "Referencia a usuarios: quién pidió" },
     fecha: { bsonType: "date", description: "Día pedido, a medianoche UTC" },
     franja: { enum: FRANJAS },
-    nombre: { bsonType: "string", minLength: 3, maxLength: 80 },
+    nombre: { bsonType: "string", minLength: 2, maxLength: 80, description: "Copiado de la cuenta al pedir" },
     telefono: { bsonType: "string", maxLength: 20 },
     correo: {
       bsonType: "string",
       maxLength: 120,
       pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
-      description: "Se guarda en minúsculas para comparar con contactos",
+      description: "Correo de la cuenta, en minúsculas, para buscar o crear el contacto al aprobar",
     },
     mensaje: { bsonType: "string", maxLength: 300 },
     estado: { enum: ["pendiente", "aprobada", "rechazada"] },
@@ -186,12 +190,7 @@ const esquemaSolicitudes = {
       bsonType: "date",
       description: "Solo en pendientes. El índice TTL borra la solicitud que nadie atendió",
     },
-    captcha: {
-      bsonType: "string",
-      minLength: 64,
-      maxLength: 64,
-      description: "Reto ALTCHA resuelto (SHA-256). Índice único: un captcha sirve una sola vez",
-    },
+    captcha: { bsonType: "string", description: "Solo en solicitudes viejas (antes del login)" },
     resuelta: { bsonType: "date" },
     reserva_id: { bsonType: "objectId", description: "Reserva creada al aprobar" },
     motivo: { bsonType: "string", maxLength: 200, description: "Motivo del rechazo" },
@@ -217,17 +216,45 @@ print("\nÍndices de solicitudes:");
 adi.solicitudes.createIndex({ expira: 1 }, { expireAfterSeconds: 0 });
 print("  TTL sobre expira: la solicitud sin respuesta se borra sola a los " + DIAS_SOLICITUD + " días");
 
-adi.solicitudes.createIndex({ captcha: 1 }, { unique: true });
-print("  único {captcha}: el mismo captcha resuelto no se puede usar dos veces");
+// Índices de la primera versión (antes del login). Se quitan si existen.
+["captcha_1", "espacio_id_1_fecha_1_franja_1_correo_1"].forEach(function (nombre) {
+  if (adi.solicitudes.getIndexes().some(function (i) { return i.name === nombre; })) {
+    adi.solicitudes.dropIndex(nombre);
+    print("  (quitado el índice viejo " + nombre + ")");
+  }
+});
 
 adi.solicitudes.createIndex(
-  { espacio_id: 1, fecha: 1, franja: 1, correo: 1 },
+  { espacio_id: 1, fecha: 1, franja: 1, usuario_id: 1 },
   { unique: true, partialFilterExpression: { estado: "pendiente" } }
 );
-print("  único parcial {espacio_id, fecha, franja, correo} solo en pendientes: una persona no repite el mismo pedido");
+print("  único parcial {espacio_id, fecha, franja, usuario_id} solo en pendientes: una persona no repite el mismo pedido");
+
+adi.solicitudes.createIndex({ usuario_id: 1, creada: -1 });
+print("  {usuario_id, creada}: \"Mis solicitudes\" de cada persona");
 
 adi.solicitudes.createIndex({ estado: 1, creada: 1 });
 print("  {estado, creada}: bandeja de pendientes de la junta, de la más antigua a la más nueva");
+
+// --- captchas_usados -------------------------------------------------------
+//
+// El login exige un captcha ALTCHA por intento. Para que un captcha resuelto no
+// se pueda reutilizar, se guarda aquí con el reto como _id: repetirlo choca con
+// el índice de _id (error 11000). El TTL los borra cuando ya vencieron.
+
+aplicarValidador("captchas_usados", {
+  $jsonSchema: {
+    bsonType: "object",
+    required: ["_id", "expira"],
+    additionalProperties: false,
+    properties: {
+      _id: { bsonType: "string", minLength: 64, maxLength: 64, description: "Reto SHA-256 ya resuelto" },
+      expira: { bsonType: "date" },
+    },
+  },
+});
+adi.captchas_usados.createIndex({ expira: 1 }, { expireAfterSeconds: 0 });
+print("  TTL sobre expira: los captcha usados se borran solos al vencer");
 
 print("\nListo. Apartado configurado a " + HORAS_APARTADO + " horas.");
 
@@ -260,7 +287,7 @@ function aplicarValidador(coleccion, validador) {
 function verificar() {
   print("\n--- Estado actual ---");
 
-  ["espacios", "reservas", "solicitudes"].forEach(function (coleccion) {
+  ["espacios", "reservas", "solicitudes", "captchas_usados"].forEach(function (coleccion) {
     const info = adi.getCollectionInfos({ name: coleccion });
     if (info.length === 0) {
       print(coleccion + ": NO EXISTE");

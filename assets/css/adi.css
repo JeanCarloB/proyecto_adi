@@ -148,6 +148,40 @@ body {
 
 .adi-nav a.is-active .adi-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, .9); }
 
+/* Usuario con sesión y botón Salir */
+.adi-user {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0;
+    flex: none;
+}
+
+.adi-user-name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--adi-ink-2);
+    line-height: 1.2;
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.adi-user-name small {
+    font-size: .75rem;
+    font-weight: 400;
+    color: var(--adi-muted);
+}
+
+/* Con el usuario en la barra no cabe el lema en pantallas medianas */
+@media (max-width: 1399.98px) {
+    .adi-topbar .adi-tagline { display: none; }
+}
+
 /* --- Encabezado de página -------------------------------------------------- */
 
 .adi-page {
@@ -1107,3 +1141,15 @@ span.adi-cal-event { cursor: default; }
     white-space: normal;
 }
 .adi-table .adi-dot { display: inline-block; margin-right: .45rem; vertical-align: middle; }
+
+/* Datos de la cuenta en el formulario de solicitud */
+.adi-account {
+    display: flex;
+    flex-direction: column;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    background: var(--adi-subtle);
+    font-size: .875rem;
+}
+.adi-account small { color: var(--adi-muted); margin-top: .15rem; }
+.adi-topbar .adi-user .adi-nav-admin { font-size: .8125rem; text-decoration: none; margin-right: .5rem; }

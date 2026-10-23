@@ -11,6 +11,7 @@
  * se ocupó: error 11000), se deshace todo y no queda nada a medias.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Driver\Session;

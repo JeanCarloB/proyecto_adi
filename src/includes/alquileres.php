@@ -10,10 +10,18 @@
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/layout.php';   // RAIZ, e(), encabezado(), pie(), avisos
 
-// Control de acceso (Seguimiento 3): las páginas de src/espacios y src/reservas son
-// de la junta; las de src/publico definen PAGINA_PUBLICA antes de incluir este archivo.
-// Cuando exista el login, aquí va la verificación, por ejemplo:
-//   if (!defined('PAGINA_PUBLICA')) { requiereRol('administrador'); }
+// Control de acceso (Seguimiento 3)
+//   - Páginas de src/publico: definen PAGINA_PUBLICA y deciden ellas mismas si piden
+//     sesión (el calendario es abierto; solicitar exige una cuenta).
+//   - Páginas de src/espacios y src/reservas: son de la junta. Exigen sesión y rol admin;
+//     una persona de la comunidad que llegue aquí se va a su vista (el calendario público).
+if (!defined('PAGINA_PUBLICA')) {
+    $usuarioAlquileres = requiereLogin();
+    if ($usuarioAlquileres['rol'] !== 'admin') {
+        header('Location: ' . RAIZ . 'src/publico/calendario.php');
+        exit;
+    }
+}
 
 use MongoDB\BSON\Decimal128;
 use MongoDB\BSON\ObjectId;

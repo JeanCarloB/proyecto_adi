@@ -8,6 +8,7 @@
  * Las que nadie atiende las borra el índice TTL a los DIAS_SOLICITUD días.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 $espacios = espaciosConColor($baseDatos);
 $vista    = texto($_GET['ver'] ?? '') === 'resueltas' ? 'resueltas' : 'pendientes';

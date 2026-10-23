@@ -8,6 +8,7 @@
  * se ve en pantalla es solo una vista previa.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+requiereRol('admin');
 
 use MongoDB\BSON\UTCDateTime;
 

@@ -1,6 +1,7 @@
 
 <?php
 require_once dirname(__DIR__) . '/includes/seguimientos.php';
+requiereRol('admin');
 
 $coleccionSeguimientos = $baseDatos->selectCollection('seguimientos');
 $coleccionContactos = $baseDatos->selectCollection('contactos');
