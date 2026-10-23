@@ -9,7 +9,7 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P3 | Datos inválidos rechazados | _(OK / falla)_ | | |
 | P4 | Alquileres: dos reservas simultáneas del mismo horario | OK | 2026-10-22 | Hazel |
 | P5 | Alquileres: un apartado vence solo (TTL) y libera el horario | OK | 2026-10-22 | Hazel |
-| P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | _(OK / falla)_ | | Hazel |
+| P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK parcial: 8 de 11 (faltan filas 8, 10 y 11) | | Hazel |
 
 ---
 
@@ -139,16 +139,16 @@ Comprueba que los permisos se aplican en el servidor y no solo escondiendo boton
 
 | # | Usuario | Acción | Esperado | Resultado |
 | --- | --- | --- | --- | --- |
-| 1 | Sin sesión | Abrir `src/publico/calendario.php` | Se ve el calendario: solo franjas ocupadas, sin nombres, teléfonos ni montos | |
-| 2 | Sin sesión | Tocar "Solicitar" en una franja libre | Pide iniciar sesión y, al entrar, vuelve al formulario con el día y la franja | |
-| 3 | Sin sesión | Abrir `src/reservas/index.php` | Lo manda al login | |
-| 4 | Cualquiera | Iniciar sesión sin marcar el captcha | "Confirme que no es un robot"; no entra aunque la contraseña sea correcta | |
-| 5 | Comunidad | Enviar una solicitud | Aparece en "Mis solicitudes" como Pendiente | |
-| 6 | Comunidad | Repetir la misma solicitud (mismo espacio, día y franja) | "Ya tenés una solicitud pendiente…" (índice único parcial) | |
-| 7 | Comunidad | Abrir `src/reservas/index.php` o `src/espacios/form.php` | Lo redirige al calendario público; no ve datos de la junta | |
-| 8 | Comunidad | Enviar un POST directo a `src/reservas/resolver_solicitud.php` | 403 "no tiene permiso" (`requiereRol('admin')`) | |
-| 9 | Admin | Aprobar la solicitud | Se crea la reserva apartada y el contacto (transacción); en "Mis solicitudes" sale Aprobada | |
-| 10 | Admin | Aprobar una solicitud cuyo horario ya se ocupó | No aparece el botón Aprobar; si se fuerza, el índice único lo rechaza y no se guarda nada | |
-| 11 | Admin | Rechazar con motivo | En "Mis solicitudes" sale Rechazada con el motivo | |
+| 1 | Sin sesión | Abrir `src/publico/calendario.php` | Se ve el calendario: solo franjas ocupadas, sin nombres, teléfonos ni montos | OK · [captura](capturas/s3-alquileres-publico.png) |
+| 2 | Sin sesión | Tocar "Solicitar" en una franja libre | Pide iniciar sesión y, al entrar, vuelve al formulario con el día y la franja | OK · [captura](capturas/s3-alquileres-solicitar-login.png) |
+| 3 | Sin sesión | Abrir `src/reservas/index.php` | Lo manda al login | OK · [captura](capturas/s3-alquileres-solicitar-login.png) |
+| 4 | Cualquiera | Iniciar sesión sin marcar el captcha | "Confirme que no es un robot"; no entra aunque la contraseña sea correcta | OK · [captura](capturas/s3-alquileres-captcha.png) |
+| 5 | Comunidad | Enviar una solicitud | Aparece en "Mis solicitudes" como Pendiente | OK · [captura](capturas/s3-alquileres-pendiente.png) |
+| 6 | Comunidad | Repetir la misma solicitud (mismo espacio, día y franja) | "Ya tenés una solicitud pendiente…" (índice único parcial) | OK · [captura](capturas/s3-alquileres-duplicada.png) |
+| 7 | Comunidad | Abrir `src/reservas/index.php` o `src/espacios/form.php` | Lo redirige al calendario público; no ve datos de la junta | OK · [captura](capturas/s3-alquileres-comunidad-redirige.png) |
+| 8 | Comunidad | Enviar un POST directo a `src/reservas/resolver_solicitud.php` | 403 "no tiene permiso" (`requiereRol('admin')`) | Pendiente |
+| 9 | Admin | Aprobar la solicitud | Se crea la reserva apartada y el contacto (transacción); en "Mis solicitudes" sale Aprobada | OK · [captura](capturas/s3-alquileres-pendiente.png) |
+| 10 | Admin | Aprobar una solicitud cuyo horario ya se ocupó | No aparece el botón Aprobar; si se fuerza, el índice único lo rechaza y no se guarda nada | Pendiente |
+| 11 | Admin | Rechazar con motivo | En "Mis solicitudes" sale Rechazada con el motivo | Pendiente |
 
-**Resultado obtenido:** _(marcar cada fila y adjuntar capturas en `docs/capturas/s3-alquileres-*.png`)_
+**Resultado obtenido:** 8 de 11 filas comprobadas, todas OK. Las filas 3 y 9 usan capturas de otras filas: abrir reservas sin sesión lleva al mismo login de la fila 2, y la solicitud aprobada aparece en "Mis solicitudes" de la fila 5. Pendientes: fila 8 (POST directo, 403), fila 10 (horario ya ocupado) y fila 11 (rechazo con motivo).
