@@ -4,6 +4,7 @@
  * Sin ?id= crea uno nuevo; con ?id= edita el existente.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 $coleccion = $baseDatos->selectCollection('espacios');
 

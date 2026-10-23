@@ -1,6 +1,7 @@
 
 <?php
 require_once dirname(__DIR__) . '/includes/seguimientos.php';
+requiereRol('admin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');

@@ -3,6 +3,7 @@
  * Registrar un contacto nuevo.
  */
 require_once dirname(__DIR__) . '/includes/contactos.php';
+requiereRol('admin');
 
 $errores = [];
 $nombre = '';

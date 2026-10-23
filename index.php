@@ -4,6 +4,7 @@
  * La verificación del entorno (PHP, extensión, Composer, .env, Atlas) está en diagnostico.php.
  */
 require_once __DIR__ . '/src/includes/layout.php';
+requiereLogin();
 
 $resumen = null;
 $error = '';

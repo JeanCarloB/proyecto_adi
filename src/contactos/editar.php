@@ -3,6 +3,7 @@
  * Editar los datos de un contacto.
  */
 require_once dirname(__DIR__) . '/includes/contactos.php';
+requiereRol('admin');
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;

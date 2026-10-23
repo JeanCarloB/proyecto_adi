@@ -11,6 +11,7 @@
  * también como página propia si hay errores o se abre desde la lista.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
+requiereRol('admin');
 
 $coleccion = $baseDatos->selectCollection('reservas');
 

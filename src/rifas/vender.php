@@ -9,6 +9,7 @@
  * Revisar primero y después insertar dejaría una ventana para el doble venta.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+requiereRol('admin');
 
 use MongoDB\BSON\UTCDateTime;
 

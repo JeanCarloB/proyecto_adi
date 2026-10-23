@@ -5,6 +5,7 @@
  * Solo mientras la rifa siga programada.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+requiereRol('admin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

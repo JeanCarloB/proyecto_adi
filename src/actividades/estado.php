@@ -7,6 +7,7 @@
  * ya tiene, así el total recaudado que se reportó a la junta no se mueve.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+requiereRol('admin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
