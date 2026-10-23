@@ -2,8 +2,12 @@
 /**
  * Inicio de sesión: busca el correo en la colección usuarios y compara la
  * contraseña con password_verify contra el hash guardado (password_hash).
+ *
+ * Cada intento exige un captcha ALTCHA (src/includes/captcha.php) que solo
+ * sirve una vez: así un bot no puede probar miles de contraseñas seguidas.
  */
 require_once __DIR__ . '/src/includes/layout.php';   // incluye sesion.php
+require_once __DIR__ . '/src/includes/captcha.php';
 
 $volver = destinoSeguro($_GET['volver'] ?? $_POST['volver'] ?? '');
 
@@ -26,6 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             require_once __DIR__ . '/src/includes/conexion.php';
+
+            // El captcha se revisa antes que la contraseña: sin captcha válido no se consulta la cuenta.
+            if (!captchaValido($baseDatos, $_POST['altcha'] ?? null)) {
+                throw new DomainException('captcha');
+            }
+
             $usuario = $baseDatos->selectCollection('usuarios')->findOne(
                 ['correo' => $correo],
                 ['typeMap' => ['root' => 'array', 'document' => 'array']]
@@ -50,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             sleep(1);   // frena los intentos repetidos
             $errores[] = 'Correo o contraseña incorrectos.';
+        } catch (DomainException $e) {
+            $errores[] = 'Confirme que no es un robot (la casilla "No soy un robot").';
         } catch (Throwable $e) {
             $errores[] = 'No se pudo conectar con la base de datos. Intente de nuevo en un momento.';
         }
@@ -82,7 +94,11 @@ encabezado('Iniciar sesión');
             <input type="password" class="form-control" id="contrasena" name="contrasena"
                    autocomplete="current-password" required>
         </div>
+        <div class="mb-4"><?php captchaWidget(); ?></div>
         <button type="submit" class="btn adi-btn-primary w-100">Entrar</button>
     </form>
+    <p class="adi-sub text-center mt-3">
+        ¿Solo quiere ver qué está libre? <a href="<?= RAIZ ?>src/publico/calendario.php">Calendario público de espacios</a>
+    </p>
 </div>
 <?php pie();

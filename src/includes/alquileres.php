@@ -10,7 +10,18 @@
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/layout.php';   // RAIZ, e(), encabezado(), pie(), avisos
 
-requiereLogin();   // todas las páginas del módulo exigen sesión
+// Control de acceso (Seguimiento 3)
+//   - Páginas de src/publico: definen PAGINA_PUBLICA y deciden ellas mismas si piden
+//     sesión (el calendario es abierto; solicitar exige una cuenta).
+//   - Páginas de src/espacios y src/reservas: son de la junta. Exigen sesión y rol admin;
+//     una persona de la comunidad que llegue aquí se va a su vista (el calendario público).
+if (!defined('PAGINA_PUBLICA')) {
+    $usuarioAlquileres = requiereLogin();
+    if ($usuarioAlquileres['rol'] !== 'admin') {
+        header('Location: ' . RAIZ . 'src/publico/calendario.php');
+        exit;
+    }
+}
 
 use MongoDB\BSON\Decimal128;
 use MongoDB\BSON\ObjectId;
@@ -36,6 +47,12 @@ const COLORES_ESPACIO = ['#2a78d6', '#eb6834', '#1baf7a', '#6250d6', '#e87ba4', 
 
 /** Horas que dura un apartado antes de que el índice TTL lo elimine. */
 const HORAS_APARTADO = 48;
+
+/** Días que una solicitud de la comunidad espera respuesta antes de que el TTL la borre. */
+const DIAS_SOLICITUD = 7;
+
+/** Hasta cuántos días adelante puede la comunidad pedir una reserva. */
+const DIAS_ADELANTE_SOLICITUD = 90;
 
 /** Zona horaria para mostrar horas (vencimientos). Las fechas de reserva se guardan en UTC. */
 const ZONA_LOCAL = 'America/Costa_Rica';
@@ -163,4 +180,36 @@ function destinoReservas(string $resultado): string
     }
 
     return rtrim('calendario.php?' . ($parametros ? http_build_query($parametros) . '&' : '') . $resultado, '?&');
+}
+
+/**
+ * Espacios con su color de calendario y sus tarifas, en el mismo orden que
+ * usa el calendario de la junta (por nombre), para que los colores coincidan.
+ * Devuelve [id => ['id', 'nombre', 'tipo', 'activo', 'color', 'tarifas' => [franja => Decimal128]]].
+ */
+function espaciosConColor(MongoDB\Database $baseDatos): array
+{
+    $espacios = [];
+    $i = 0;
+    foreach ($baseDatos->selectCollection('espacios')->find([], ['sort' => ['nombre' => 1]]) as $esp) {
+        $tarifas = [];
+        foreach ($esp['tarifas'] ?? [] as $t) {
+            $tarifas[$t['franja']] = $t['monto'];
+        }
+        $espacios[(string) $esp['_id']] = [
+            'id'      => $esp['_id'],
+            'nombre'  => $esp['nombre'],
+            'tipo'    => TIPOS_ESPACIO[$esp['tipo'] ?? ''] ?? '',
+            'activo'  => ($esp['activo'] ?? true) === true,
+            'color'   => COLORES_ESPACIO[$i++ % count(COLORES_ESPACIO)],
+            'tarifas' => $tarifas,
+        ];
+    }
+    return $espacios;
+}
+
+/** Fecha 'Y-m-d' de un UTCDateTime guardado a medianoche UTC. */
+function diaTexto(UTCDateTime $fecha): string
+{
+    return $fecha->toDateTime()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
 }

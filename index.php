@@ -36,7 +36,9 @@ $modulos = [
             'Reservas próximas' => $resumen['proximas'],
             'Apartadas'         => $resumen['apartadas'],
         ] : [],
-        'enlaces' => ['Reservas' => 'src/reservas/index.php', 'Espacios' => 'src/espacios/index.php'],
+        'enlaces' => esAdmin()
+            ? ['Reservas' => 'src/reservas/index.php', 'Espacios' => 'src/espacios/index.php', 'Solicitudes' => 'src/reservas/solicitudes.php', 'Calendario público' => 'src/publico/calendario.php']
+            : ['Calendario' => 'src/publico/calendario.php', 'Solicitar una reserva' => 'src/publico/solicitar.php', 'Mis solicitudes' => 'src/publico/mis_solicitudes.php'],
     ],
     [
         'modulo' => 'ventas',
