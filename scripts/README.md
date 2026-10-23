@@ -81,6 +81,22 @@ php scripts/crear_usuarios_prueba.php      # usa MONGODB_URI y MONGODB_DB del .e
 
 Son credenciales de prueba públicas: úselas en `adi_prueba` o en local, nunca como usuarios reales del servidor.
 
+## prueba_concurrencia.ps1 y prueba_concurrencia.php
+
+Prueba P4 de `docs/pruebas.md` (Issue #15): dos procesos PHP en paralelo intentan apartar el mismo horario en el mismo instante. En cada ronda uno inserta y el otro recibe el error 11000 del índice único `{espacio_id, fecha, franja}`. Usa la fecha 31/12/2099 y la limpia al terminar.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\prueba_concurrencia.ps1 -Rondas 5
+```
+
+## prueba_ttl.js
+
+Prueba P5 de `docs/pruebas.md` (Issue #16): crea un apartado que vence en 60 s, mide cuánto tarda el índice TTL en borrarlo y comprueba que el horario se puede volver a reservar. Usa la fecha 30/12/2099 y la limpia al terminar.
+
+```bash
+mongosh "<URI personal de Atlas>" --file scripts/prueba_ttl.js
+```
+
 ## medir_alquileres.js
 
 Mediciones del módulo de alquileres (Issue #17): calendario público (consulta cubierta), disponibilidad de un horario, calendario de la junta (`$lookup`) y bandeja de solicitudes, cada una con índice y sin índice, 3 corridas y la mediana. No crea ni borra índices. Los resultados están en `docs/mediciones.md`.
