@@ -56,6 +56,7 @@ function encabezado(string $titulo, string $seccion = ''): void
         'espacios'    => ['Espacios',    'src/espacios/index.php',      'alquileres'],
         'reservas'    => ['Reservas',    'src/reservas/index.php',      'alquileres'],
         'calendario'  => ['Calendario',  'src/reservas/calendario.php', 'alquileres'],
+        'solicitudes' => ['Solicitudes', 'src/reservas/solicitudes.php', 'alquileres'],
         'actividades' => ['Actividades', 'src/actividades/index.php',   'ventas'],
         'ventas'      => ['Ventas',      'src/ventas/index.php',        'ventas'],
         'contactos'   => ['Contactos',   'src/contactos/index.php',     'contactos'],
@@ -89,6 +90,52 @@ function encabezado(string $titulo, string $seccion = ''): void
                     <span class="adi-dot adi-dot--<?= $modulo ?>"></span><?= e($texto) ?>
                 </a>
             <?php endforeach; ?>
+        </nav>
+    </div>
+</header>
+
+<main class="container adi-page">
+    <?php
+}
+
+/**
+ * Cabecera de las páginas PÚBLICAS (comunidad, sin iniciar sesión).
+ * No muestra los módulos de administración: solo lo que la comunidad puede ver.
+ * $seccion marca el enlace activo: 'calendario' o 'solicitar'.
+ */
+function encabezadoPublico(string $titulo, string $seccion = ''): void
+{
+    $enlaces = [
+        'calendario' => ['Calendario de espacios', 'src/publico/calendario.php'],
+        'solicitar'  => ['Solicitar una reserva',  'src/publico/solicitar.php'],
+    ];
+    ?>
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= e($titulo) ?> · ADIministra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= RAIZ ?>assets/css/adi.css" rel="stylesheet">
+</head>
+<body class="adi-publico">
+
+<header class="adi-topbar">
+    <div class="container">
+        <a class="adi-brand" href="<?= RAIZ ?>src/publico/calendario.php">
+            <span class="adi-wordmark"><b>ADI</b>ministra</span>
+            <span class="adi-tagline">Comunidad</span>
+        </a>
+        <nav class="adi-nav" aria-label="Secciones públicas">
+            <?php foreach ($enlaces as $clave => [$texto, $ruta]): ?>
+                <a href="<?= RAIZ . $ruta ?>" class="<?= $clave === $seccion ? 'is-active' : '' ?>"
+                   <?= $clave === $seccion ? 'aria-current="page"' : '' ?>><?= e($texto) ?></a>
+            <?php endforeach; ?>
+            <a href="<?= RAIZ ?>index.php" class="adi-nav-admin">Junta directiva →</a>
         </nav>
     </div>
 </header>

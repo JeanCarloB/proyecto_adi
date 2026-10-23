@@ -35,7 +35,7 @@ $modulos = [
             'Reservas próximas' => $resumen['proximas'],
             'Apartadas'         => $resumen['apartadas'],
         ] : [],
-        'enlaces' => ['Reservas' => 'src/reservas/index.php', 'Espacios' => 'src/espacios/index.php'],
+        'enlaces' => ['Reservas' => 'src/reservas/index.php', 'Espacios' => 'src/espacios/index.php', 'Solicitudes' => 'src/reservas/solicitudes.php', 'Calendario público' => 'src/publico/calendario.php'],
     ],
     [
         'modulo' => 'ventas',

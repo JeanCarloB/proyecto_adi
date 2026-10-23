@@ -549,8 +549,7 @@ body {
     place-items: center;
     font-size: .75rem;
     font-weight: 700;
-    color: #fff;
-    background: currentColor;
+    background: currentColor;   /* el color del aviso; el símbolo va en blanco (span) */
 }
 
 .adi-alert-icon > span { color: #fff; }
@@ -1061,3 +1060,50 @@ button.adi-rifa-num:focus-visible { outline: 2px solid var(--adi-mod-ventas); ou
 .adi-pager-field .form-control { width: 4rem; height: 31px; padding: .2rem .4rem; text-align: center; font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .adi-pager-nav { flex-wrap: wrap; }
 .adi-pager .disabled { opacity: .45; pointer-events: none; }
+
+/* --- Páginas públicas (comunidad) ---------------------------------------- */
+.adi-nav a.adi-nav-admin { color: var(--adi-muted); margin-left: .5rem; }
+.adi-nav a.adi-nav-admin:hover { color: var(--adi-ink); }
+.adi-free-slot.is-taken { background: var(--adi-subtle); border-style: dashed; color: var(--adi-muted); cursor: default; }
+.adi-free-slot.is-taken .adi-free-price { color: var(--adi-muted); font-weight: 500; }
+.adi-free-slot.is-taken:hover { border-color: var(--adi-border); background: var(--adi-subtle); }
+span.adi-cal-event { cursor: default; }
+.adi-publico altcha-widget {
+    --altcha-border-radius: 10px;
+    --altcha-color-border: var(--adi-border);
+    --altcha-max-width: 100%;
+}
+
+/* --- Bandeja de solicitudes ---------------------------------------------- */
+.adi-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--adi-border); }
+.adi-tabs a {
+    padding: .55rem .9rem;
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--adi-ink-2);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+.adi-tabs a.is-active { color: var(--adi-ink); border-bottom-color: var(--adi-accent); }
+.adi-count {
+    display: inline-block;
+    min-width: 1.4rem;
+    padding: 0 .4rem;
+    margin-left: .3rem;
+    border-radius: 999px;
+    background: var(--adi-subtle);
+    font-size: .75rem;
+    text-align: center;
+}
+.adi-tabs a.is-active .adi-count { background: var(--adi-accent); color: #fff; }
+.adi-quote {
+    margin-top: .35rem;
+    padding-left: .6rem;
+    border-left: 2px solid var(--adi-border-strong);
+    font-size: .8125rem;
+    color: var(--adi-ink-2);
+    max-width: 36ch;
+    white-space: normal;
+}
+.adi-table .adi-dot { display: inline-block; margin-right: .45rem; vertical-align: middle; }

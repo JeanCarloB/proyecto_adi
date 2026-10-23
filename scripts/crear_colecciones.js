@@ -23,6 +23,10 @@
  *
  * Es idempotente: se puede correr las veces que haga falta.
  *
+ * También crea "solicitudes": los pedidos de reserva que hace la comunidad
+ * desde la página pública (protegidos con captcha). La junta los aprueba o
+ * los rechaza; los que nadie atiende vencen solos a los DIAS_SOLICITUD días.
+ *
  * Issues: #7 (espacios), #8 (reservas), #9 (índice único), #10 (índice TTL).
  */
 
@@ -34,6 +38,9 @@ const FRANJAS = ["mañana", "tarde", "noche"];
 /** Horas que dura un apartado antes de vencer. El valor lo usa la aplicación
  *  al calcular "vence"; el índice TTL solo lee la fecha ya calculada. */
 const HORAS_APARTADO = 48;
+
+/** Días que una solicitud de la comunidad espera respuesta antes de vencer. */
+const DIAS_SOLICITUD = 7;
 
 // --- espacios -------------------------------------------------------------
 
@@ -148,6 +155,80 @@ print("  único {espacio_id, fecha, franja}: dos reservas del mismo horario no p
 adi.reservas.createIndex({ vence: 1 }, { expireAfterSeconds: 0 });
 print("  TTL sobre vence: el apartado sin confirmar se elimina solo (el monitor corre cada ~60 s)");
 
+// --- solicitudes -----------------------------------------------------------
+//
+// Pedidos de la comunidad desde src/publico/solicitar.php. No son reservas:
+// no ocupan el horario hasta que la junta las aprueba. Así un bot o una
+// persona no puede bloquear la cancha con pedidos falsos.
+
+const esquemaSolicitudes = {
+  bsonType: "object",
+  title: "Solicitud de reserva hecha por la comunidad",
+  required: ["espacio_id", "fecha", "franja", "nombre", "correo", "estado", "creada", "captcha"],
+  additionalProperties: false,
+  properties: {
+    _id: { bsonType: "objectId" },
+    espacio_id: { bsonType: "objectId", description: "Referencia a espacios" },
+    fecha: { bsonType: "date", description: "Día pedido, a medianoche UTC" },
+    franja: { enum: FRANJAS },
+    nombre: { bsonType: "string", minLength: 3, maxLength: 80 },
+    telefono: { bsonType: "string", maxLength: 20 },
+    correo: {
+      bsonType: "string",
+      maxLength: 120,
+      pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      description: "Se guarda en minúsculas para comparar con contactos",
+    },
+    mensaje: { bsonType: "string", maxLength: 300 },
+    estado: { enum: ["pendiente", "aprobada", "rechazada"] },
+    creada: { bsonType: "date" },
+    expira: {
+      bsonType: "date",
+      description: "Solo en pendientes. El índice TTL borra la solicitud que nadie atendió",
+    },
+    captcha: {
+      bsonType: "string",
+      minLength: 64,
+      maxLength: 64,
+      description: "Reto ALTCHA resuelto (SHA-256). Índice único: un captcha sirve una sola vez",
+    },
+    resuelta: { bsonType: "date" },
+    reserva_id: { bsonType: "objectId", description: "Reserva creada al aprobar" },
+    motivo: { bsonType: "string", maxLength: 200, description: "Motivo del rechazo" },
+  },
+};
+
+// Igual que en reservas: "expira" existe si y solo si la solicitud sigue pendiente.
+// Al aprobar o rechazar se hace $unset de "expira" y el TTL ya no la borra.
+aplicarValidador("solicitudes", {
+  $and: [
+    { $jsonSchema: esquemaSolicitudes },
+    {
+      $or: [
+        { estado: "pendiente", expira: { $exists: true } },
+        { estado: { $in: ["aprobada", "rechazada"] }, expira: { $exists: false } },
+      ],
+    },
+  ],
+});
+
+print("\nÍndices de solicitudes:");
+
+adi.solicitudes.createIndex({ expira: 1 }, { expireAfterSeconds: 0 });
+print("  TTL sobre expira: la solicitud sin respuesta se borra sola a los " + DIAS_SOLICITUD + " días");
+
+adi.solicitudes.createIndex({ captcha: 1 }, { unique: true });
+print("  único {captcha}: el mismo captcha resuelto no se puede usar dos veces");
+
+adi.solicitudes.createIndex(
+  { espacio_id: 1, fecha: 1, franja: 1, correo: 1 },
+  { unique: true, partialFilterExpression: { estado: "pendiente" } }
+);
+print("  único parcial {espacio_id, fecha, franja, correo} solo en pendientes: una persona no repite el mismo pedido");
+
+adi.solicitudes.createIndex({ estado: 1, creada: 1 });
+print("  {estado, creada}: bandeja de pendientes de la junta, de la más antigua a la más nueva");
+
 print("\nListo. Apartado configurado a " + HORAS_APARTADO + " horas.");
 
 verificar();
@@ -179,7 +260,7 @@ function aplicarValidador(coleccion, validador) {
 function verificar() {
   print("\n--- Estado actual ---");
 
-  ["espacios", "reservas"].forEach(function (coleccion) {
+  ["espacios", "reservas", "solicitudes"].forEach(function (coleccion) {
     const info = adi.getCollectionInfos({ name: coleccion });
     if (info.length === 0) {
       print(coleccion + ": NO EXISTE");
