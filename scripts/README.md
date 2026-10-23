@@ -97,6 +97,14 @@ Prueba P5 de `docs/pruebas.md` (Issue #16): crea un apartado que vence en 60 s, 
 mongosh "<URI personal de Atlas>" --file scripts/prueba_ttl.js
 ```
 
+## medir_alquileres.js
+
+Mediciones del módulo de alquileres (Issue #17): calendario público (consulta cubierta), disponibilidad de un horario, calendario de la junta (`$lookup`) y bandeja de solicitudes, cada una con índice y sin índice, 3 corridas y la mediana. No crea ni borra índices. Los resultados están en `docs/mediciones.md`.
+
+```bash
+mongosh "<URI personal de Atlas>" --file scripts/medir_alquileres.js
+```
+
 ## medir_indices.js
 
 Mide con `explain("executionStats")` las consultas clave con y sin índice: total recaudado por actividad, ventas de una actividad en un día, disponibilidad de una reserva y número de rifa vendido. Cada caso corre 3 veces y se reporta la mediana. "Sin índice" se fuerza con `hint({$natural: 1})`, así que el script **no crea ni borra índices ni modifica datos**.
