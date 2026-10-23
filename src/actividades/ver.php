@@ -77,7 +77,6 @@ encabezado($actividad['nombre'], 'actividades');
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-start">
-        <?php if (esAdmin()): ?>
         <?php if ($abierta && !$esRifa): ?>
             <a href="../ventas/form.php?actividad=<?= e($id) ?>" class="btn adi-btn-primary text-nowrap">Registrar venta</a>
         <?php endif; ?>
@@ -92,7 +91,6 @@ encabezado($actividad['nombre'], 'actividades');
                 <?= $abierta ? 'Finalizar' : 'Reabrir' ?>
             </button>
         </form>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -172,7 +170,7 @@ if (isset($mensajesError[$error])) {
                         <span class="adi-rifa-num is-sold" role="listitem" title="Vendido a <?= e($quien) ?>">
                             <?= numeroRifa($n) ?>
                         </span>
-                    <?php elseif ($abierta && $precio !== null && esAdmin()): ?>
+                    <?php elseif ($abierta && $precio !== null): ?>
                         <button type="button" class="adi-rifa-num" role="listitem" data-numero="<?= $n ?>"
                                 title="Disponible: elegir el <?= numeroRifa($n) ?>">
                             <?= numeroRifa($n) ?>
@@ -204,7 +202,7 @@ if (isset($mensajesError[$error])) {
                     <strong>¡Todos los números se vendieron!</strong>
                     La rifa está completa.
                 </div>
-            <?php elseif (esAdmin()): ?>
+            <?php else: ?>
                 <form action="../rifas/vender.php" method="POST" class="adi-card adi-card-body">
                     <h2 class="adi-section-title">Vender un número</h2>
                     <input type="hidden" name="rifa" value="<?= e($id) ?>">
@@ -263,7 +261,7 @@ if (isset($mensajesError[$error])) {
                             <td class="text-nowrap"><?= mostrarHora($n['fecha']) ?></td>
                             <td class="adi-num"><?= dinero($n['monto']) ?></td>
                             <td class="text-end">
-                                <?php if ($abierta && esAdmin()): ?>
+                                <?php if ($abierta): ?>
                                     <form action="../rifas/anular.php" method="POST" class="d-inline"
                                           onsubmit="return confirm('¿Anular el número <?= numeroRifa($n['numero']) ?>? Quedará libre otra vez.');">
                                         <input type="hidden" name="id" value="<?= e($n['_id']) ?>">
@@ -330,7 +328,7 @@ if (isset($mensajesError[$error])) {
                                     : '<span class="adi-sub">—</span>' ?></td>
                                 <td class="adi-num"><?= dinero($v['total']) ?></td>
                                 <td class="text-end text-nowrap">
-                                    <?php if ($abierta && esAdmin()): ?>
+                                    <?php if ($abierta): ?>
                                         <a href="../ventas/form.php?id=<?= e($v['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                                         <form action="../ventas/anular.php" method="POST" class="d-inline"
                                               onsubmit="return confirm('¿Anular esta venta? Dejará de sumar al total.');">

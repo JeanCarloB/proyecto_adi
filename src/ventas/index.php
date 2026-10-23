@@ -162,14 +162,14 @@ if (($_GET['error'] ?? '') === 'cerrada') {
                             : '<span class="adi-sub">—</span>' ?></td>
                         <td class="adi-num"><?= dinero($v['total']) ?></td>
                         <td class="text-end text-nowrap">
-                            <?php if ($abierta && esAdmin()): ?>
+                            <?php if ($abierta): ?>
                                 <a href="form.php?id=<?= e($v['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                                 <form action="anular.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Anular esta venta? Dejará de sumar al total.');">
                                     <input type="hidden" name="id" value="<?= e($v['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
                                 </form>
-                            <?php elseif (!$abierta): ?>
+                            <?php else: ?>
                                 <span class="adi-sub">Cerrada</span>
                             <?php endif; ?>
                         </td>

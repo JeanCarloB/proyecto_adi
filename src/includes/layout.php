@@ -122,7 +122,6 @@ function pie(): void
 /**
  * Encabezado de cada página: módulo, título, descripción y una acción opcional.
  * $accion = ['texto' => '...', 'url' => '...']
- * La acción (crear algo) solo se muestra a administradores.
  */
 function tituloPagina(string $titulo, string $descripcion = '', ?array $accion = null, string $modulo = 'alquileres'): void
 {
@@ -137,7 +136,7 @@ function tituloPagina(string $titulo, string $descripcion = '', ?array $accion =
                 <p class="adi-lead"><?= e($descripcion) ?></p>
             <?php endif; ?>
         </div>
-        <?php if ($accion && esAdmin()): ?>
+        <?php if ($accion): ?>
             <a href="<?= e($accion['url']) ?>" class="btn adi-btn-primary text-nowrap"><?= e($accion['texto']) ?></a>
         <?php endif; ?>
     </div>

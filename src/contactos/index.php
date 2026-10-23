@@ -125,7 +125,6 @@ if (($_GET['desactivado'] ?? '') === '1') {
                             </span>
                         </td>
                         <td class="text-end text-nowrap">
-                            <?php if (esAdmin()): ?>
                             <a href="editar.php?id=<?= urlencode((string) $contacto['_id']) ?>"
                                class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($activo): ?>
@@ -134,7 +133,6 @@ if (($_GET['desactivado'] ?? '') === '1') {
                                     <input type="hidden" name="id" value="<?= e((string) $contacto['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Desactivar</button>
                                 </form>
-                            <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>
