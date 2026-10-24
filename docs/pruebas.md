@@ -9,7 +9,7 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P3 | Datos inválidos rechazados | _(OK / falla)_ | | |
 | P4 | Alquileres: dos reservas simultáneas del mismo horario | OK | 2026-10-22 | Hazel |
 | P5 | Alquileres: un apartado vence solo (TTL) y libera el horario | OK | 2026-10-22 | Hazel |
-| P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK parcial: 8 de 11 (faltan filas 8, 10 y 11) | | Hazel |
+| P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK (11 de 11) | | Hazel |
 
 ---
 
@@ -146,9 +146,9 @@ Comprueba que los permisos se aplican en el servidor y no solo escondiendo boton
 | 5 | Comunidad | Enviar una solicitud | Aparece en "Mis solicitudes" como Pendiente | OK · [captura](capturas/s3-alquileres-pendiente.png) |
 | 6 | Comunidad | Repetir la misma solicitud (mismo espacio, día y franja) | "Ya tenés una solicitud pendiente…" (índice único parcial) | OK · [captura](capturas/s3-alquileres-duplicada.png) |
 | 7 | Comunidad | Abrir `src/reservas/index.php` o `src/espacios/form.php` | Lo redirige al calendario público; no ve datos de la junta | OK · [captura](capturas/s3-alquileres-comunidad-redirige.png) |
-| 8 | Comunidad | Enviar un POST directo a `src/reservas/resolver_solicitud.php` | 403 "no tiene permiso" (`requiereRol('admin')`) | Pendiente |
+| 8 | Comunidad | Enviar un POST directo a `src/reservas/resolver_solicitud.php` | No se ejecuta: el control de acceso de `alquileres.php` lo redirige al calendario público antes de llegar a `requiereRol('admin')` | OK · [captura](capturas/s3-alquileres-403.png) |
 | 9 | Admin | Aprobar la solicitud | Se crea la reserva apartada y el contacto (transacción); en "Mis solicitudes" sale Aprobada | OK · [captura](capturas/s3-alquileres-pendiente.png) |
-| 10 | Admin | Aprobar una solicitud cuyo horario ya se ocupó | No aparece el botón Aprobar; si se fuerza, el índice único lo rechaza y no se guarda nada | Pendiente |
-| 11 | Admin | Rechazar con motivo | En "Mis solicitudes" sale Rechazada con el motivo | Pendiente |
+| 10 | Admin | Apartar desde Reservas un horario que alguien de la comunidad pidió y sigue pendiente | Aviso "Alguien de la comunidad ya pidió este horario" con enlace a la bandeja; solo se aparta con "Apartar de todas formas", y entonces la solicitud sale "Horario ya ocupado" sin el botón Aprobar | OK · [captura](capturas/s3-alquileres-ocupado.png) |
+| 11 | Admin | Rechazar con motivo | En "Mis solicitudes" sale Rechazada con el motivo | OK · [captura](capturas/s3-alquileres-rechazada.png) |
 
-**Resultado obtenido:** 8 de 11 filas comprobadas, todas OK. Las filas 3 y 9 usan capturas de otras filas: abrir reservas sin sesión lleva al mismo login de la fila 2, y la solicitud aprobada aparece en "Mis solicitudes" de la fila 5. Pendientes: fila 8 (POST directo, 403), fila 10 (horario ya ocupado) y fila 11 (rechazo con motivo).
+**Resultado obtenido:** 11 de 11 filas comprobadas, todas OK. Las filas 3 y 9 usan capturas de otras filas: abrir reservas sin sesión lleva al mismo login de la fila 2, y la solicitud aprobada aparece en "Mis solicitudes" de la fila 5. En la fila 8, el `fetch` termina con `redirected: true` en `src/publico/calendario.php`: la petición de comunidad nunca llega a la lógica de aprobar. En la fila 10, después de apartar de todas formas, la solicitud del 31 oct queda marcada "Horario ya ocupado" y solo se puede rechazar.

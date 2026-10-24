@@ -6,6 +6,10 @@
  * la elimina sola si nadie confirma el pago. El índice único impide que dos
  * personas aparten el mismo espacio, día y franja: si pasa, MongoDB responde
  * con el error 11000 y aquí se traduce a un mensaje claro.
+ *
+ * Antes de apartar se revisa si alguien de la comunidad pidió ese mismo
+ * horario y su solicitud sigue pendiente. Si es así, se avisa y la junta
+ * decide: atender primero la solicitud o apartar de todas formas.
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
@@ -13,6 +17,7 @@ requiereRol('admin');
 use MongoDB\BSON\UTCDateTime;
 
 $errores = [];
+$pendientes = [];   // solicitudes de la comunidad que esperan el mismo horario
 
 // Datos para los selects
 $espacios = $baseDatos->selectCollection('espacios')
@@ -62,7 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = 'Seleccioná el contacto que hace la reserva.';
     }
 
-    if (!$errores) {
+    // ¿Hay solicitudes de la comunidad esperando este mismo horario?
+    // Usa el prefijo {espacio_id, fecha, franja} del índice único parcial de solicitudes.
+    if (!$errores && ($_POST['aun_asi'] ?? '') !== '1') {
+        $pendientes = $baseDatos->selectCollection('solicitudes')->find(
+            ['espacio_id' => $idEspacio, 'fecha' => $dia, 'franja' => $franja, 'estado' => 'pendiente'],
+            ['projection' => ['nombre' => 1, 'creada' => 1], 'sort' => ['creada' => 1]]
+        )->toArray();
+    }
+
+    if (!$errores && !$pendientes) {
         // El monto sale de la tarifa guardada, nunca del formulario.
         $monto = $tarifas[(string) $idEspacio][$franja];
         $vence = new UTCDateTime((time() + HORAS_APARTADO * 3600) * 1000);
@@ -109,13 +123,33 @@ encabezado('Nueva reserva', 'reservas');
 
     <?php listaErrores($errores); ?>
 
+    <?php if ($pendientes): $n = count($pendientes); ?>
+        <div class="adi-alert adi-alert--warn" role="alert">
+            <span class="adi-alert-icon"><span>!</span></span>
+            <div>
+                <strong><?= $n === 1 ? 'Alguien de la comunidad ya pidió este horario' : $n . ' personas de la comunidad ya pidieron este horario' ?></strong>
+                <ul class="mt-1 mb-2">
+                    <?php foreach ($pendientes as $p): ?>
+                        <li><?= e($p['nombre']) ?> · enviada el <?= e(mostrarHora($p['creada'])) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                Revisá primero si la vas a aprobar o rechazar. Si apartás el espacio ahora, la solicitud
+                queda sin opción de aprobarse y habrá que rechazarla.
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="solicitudes.php" class="btn btn-sm adi-btn-primary">Ir a la bandeja de solicitudes</a>
+                    <button type="submit" form="form-reserva" name="aun_asi" value="1" class="btn btn-sm adi-btn-ghost">Apartar de todas formas</button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php if (!$espacios): ?>
         <div class="adi-card adi-empty">
             <strong>No hay espacios activos</strong>
             <a href="../espacios/form.php">Registrá uno</a> para poder reservar.
         </div>
     <?php else: ?>
-    <form method="POST" class="adi-card adi-card-body">
+    <form method="POST" id="form-reserva" class="adi-card adi-card-body">
         <?php if ($volver): ?>
             <input type="hidden" name="volver" value="calendario">
             <input type="hidden" name="mes" value="<?= e($mesCal) ?>">
