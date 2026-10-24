@@ -125,13 +125,10 @@ if (isset($errores[$_GET['error'] ?? ''])) {
                         </td>
                         <td class="text-end text-nowrap">
                             <?php if ($vista === 'pendientes'): ?>
-                                <form action="resolver_solicitud.php" method="POST" class="d-inline"
-                                      onsubmit="const m = prompt('Motivo del rechazo (opcional):'); if (m === null) return false; this.motivo.value = m; return true;">
-                                    <input type="hidden" name="id" value="<?= e($s['_id']) ?>">
-                                    <input type="hidden" name="accion" value="rechazar">
-                                    <input type="hidden" name="motivo" value="">
-                                    <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Rechazar</button>
-                                </form>
+                                <button type="button" class="btn btn-sm adi-btn-quiet-danger js-rechazar"
+                                        data-id="<?= e($s['_id']) ?>"
+                                        data-resumen="<?= e(($esp['nombre'] ?? 'Espacio') . ' · ' . diaLargo($s['fecha']) . ' · ' . (FRANJAS[$s['franja']] ?? $s['franja'])) ?>"
+                                        data-nombre="<?= e($s['nombre']) ?>">Rechazar</button>
                                 <?php if ($libre): ?>
                                     <form action="resolver_solicitud.php" method="POST" class="d-inline"
                                           onsubmit="return confirm('¿Aprobar? Se aparta el espacio por <?= HORAS_APARTADO ?> horas a nombre de esta persona.');">
@@ -151,4 +148,67 @@ if (isset($errores[$_GET['error'] ?? ''])) {
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Cuadro para rechazar con motivo (reemplaza al prompt() del navegador) -->
+<dialog id="rechazo" class="adi-dialog" aria-labelledby="rechazo-titulo">
+    <form action="resolver_solicitud.php" method="POST">
+        <input type="hidden" name="id" value="">
+        <input type="hidden" name="accion" value="rechazar">
+
+        <div class="adi-dialog-head">
+            <div>
+                <div class="adi-dialog-eyebrow"><span class="adi-dot" style="background: var(--adi-danger)"></span>Rechazar solicitud</div>
+                <h2 class="adi-dialog-title" id="rechazo-titulo"></h2>
+                <div class="adi-sub mt-1" id="rechazo-nombre"></div>
+            </div>
+            <button type="button" class="adi-dialog-close" data-cerrar aria-label="Cerrar">&times;</button>
+        </div>
+
+        <label for="rechazo-motivo" class="form-label">Motivo <span class="adi-sub">(opcional, lo ve la persona en "Mis solicitudes")</span></label>
+        <textarea id="rechazo-motivo" name="motivo" class="form-control" rows="3" maxlength="200"
+                  placeholder="Por ejemplo: el espacio está en mantenimiento ese día"></textarea>
+        <div class="adi-motivo-pie">
+            <div class="adi-chips" aria-label="Motivos frecuentes">
+                <button type="button" class="adi-chip">El espacio está en mantenimiento</button>
+                <button type="button" class="adi-chip">Ese día hay una actividad de la ADI</button>
+                <button type="button" class="adi-chip">Faltan datos para contactarle</button>
+            </div>
+            <span class="adi-sub" id="rechazo-cuenta">0/200</span>
+        </div>
+
+        <div class="adi-dialog-actions">
+            <button type="button" class="btn adi-btn-ghost" data-cerrar>Cancelar</button>
+            <button type="submit" class="btn adi-btn-danger">Rechazar solicitud</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+(() => {
+    const dlg = document.getElementById('rechazo');
+    const form = dlg.querySelector('form');
+    const motivo = document.getElementById('rechazo-motivo');
+    const cuenta = document.getElementById('rechazo-cuenta');
+    const contar = () => { cuenta.textContent = motivo.value.length + '/200'; };
+
+    document.querySelectorAll('.js-rechazar').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            form.querySelector('[name=id]').value = btn.dataset.id;
+            document.getElementById('rechazo-titulo').textContent = btn.dataset.resumen;
+            document.getElementById('rechazo-nombre').textContent = 'Solicitada por ' + btn.dataset.nombre;
+            motivo.value = '';
+            contar();
+            dlg.showModal();
+            motivo.focus();
+        });
+    });
+    dlg.querySelectorAll('.adi-chip').forEach((chip) => {
+        chip.addEventListener('click', () => { motivo.value = chip.textContent; contar(); motivo.focus(); });
+    });
+    motivo.addEventListener('input', contar);
+    dlg.querySelectorAll('[data-cerrar]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+    dlg.addEventListener('click', (ev) => { if (ev.target === dlg) dlg.close(); });   // clic fuera
+    form.addEventListener('submit', () => { form.querySelector('[type=submit]').disabled = true; });
+})();
+</script>
 <?php pie();

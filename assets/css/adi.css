@@ -860,6 +860,40 @@ body {
     margin-top: 1.25rem;
 }
 
+/* Cuadro de rechazo de solicitudes */
+.adi-btn-danger {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--adi-danger);
+    --bs-btn-border-color: var(--adi-danger);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #912018;
+    --bs-btn-hover-border-color: #912018;
+    --bs-btn-active-bg: #7a1a14;
+    --bs-btn-disabled-bg: var(--adi-danger);
+    --bs-btn-disabled-border-color: var(--adi-danger);
+    font-weight: 600;
+}
+.adi-dialog textarea.form-control { resize: vertical; min-height: 5.5rem; }
+.adi-motivo-pie {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-top: .6rem;
+}
+.adi-motivo-pie > .adi-sub { flex: none; font-variant-numeric: tabular-nums; padding-top: .3rem; }
+.adi-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.adi-chip {
+    border: 1px solid var(--adi-border);
+    background: var(--adi-subtle);
+    color: var(--adi-ink-2);
+    border-radius: 999px;
+    padding: .25rem .7rem;
+    font-size: .8125rem;
+    line-height: 1.3;
+}
+.adi-chip:hover { border-color: var(--adi-border-strong); background: var(--adi-surface); color: var(--adi-ink); }
+
 /* Lista de reservas dentro de la tarjeta del día */
 .adi-day-list { display: flex; flex-direction: column; gap: 6px; }
 .adi-day-item {
