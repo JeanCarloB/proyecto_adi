@@ -15,7 +15,9 @@ require_once __DIR__ . '/layout.php';   // RAIZ, e(), encabezado(), pie(), aviso
 //     sesión (el calendario es abierto; solicitar exige una cuenta).
 //   - Páginas de src/espacios y src/reservas: son de la junta. Exigen sesión y rol admin;
 //     una persona de la comunidad que llegue aquí se va a su vista (el calendario público).
-if (!defined('PAGINA_PUBLICA')) {
+//   - Otros módulos que reutilizan estas funciones (ventas.php) definen ACCESO_PROPIO
+//     y aplican su propio control: este bloque no los manda al calendario de alquileres.
+if (!defined('PAGINA_PUBLICA') && !defined('ACCESO_PROPIO')) {
     $usuarioAlquileres = requiereLogin();
     if ($usuarioAlquileres['rol'] !== 'admin') {
         header('Location: ' . RAIZ . 'src/publico/calendario.php');

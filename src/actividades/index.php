@@ -7,6 +7,8 @@
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
 
+$admin = esAdmin();
+
 // --- Filtros ----------------------------------------------------------------
 
 $fTipo   = texto($_GET['tipo']   ?? '');
@@ -40,10 +42,13 @@ foreach ($actividades as $a) {
 
 encabezado('Actividades', 'actividades');
 
+// Administración registra y edita; la comunidad solo consulta (Issue #80).
 tituloPagina(
     'Actividades',
-    'Turnos, ferias y rifas. Una actividad finalizada ya no acepta ventas y su total queda cerrado.',
-    ['texto' => 'Nueva actividad', 'url' => 'form.php'],
+    $admin
+        ? 'Turnos, ferias y rifas. Una actividad finalizada ya no acepta ventas y su total queda cerrado.'
+        : 'Turnos, ferias y rifas de la ADI y cuánto ha recaudado cada una.',
+    $admin ? ['texto' => 'Nueva actividad', 'url' => 'form.php'] : null,
     'ventas'
 );
 ?>
@@ -96,7 +101,11 @@ tituloPagina(
     <?php if (!$actividades): ?>
         <div class="adi-empty">
             <strong>No hay actividades con estos filtros</strong>
-            <a href="form.php">Registrá un turno, una feria o una rifa</a> para empezar a vender.
+            <?php if ($admin): ?>
+                <a href="form.php">Registrá un turno, una feria o una rifa</a> para empezar a vender.
+            <?php else: ?>
+                Cuando la junta programe un turno, una feria o una rifa, va a aparecer aquí.
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div class="adi-table-meta">
@@ -138,9 +147,11 @@ tituloPagina(
                         <td class="adi-num"><?= dinero($t['total']) ?></td>
                         <td class="text-end text-nowrap">
                             <a href="ver.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-soft">
-                                <?= aceptaVentas($a) ? ($esRifa ? 'Vender números' : 'Ver y vender') : 'Ver' ?>
+                                <?= $admin && aceptaVentas($a) ? ($esRifa ? 'Vender números' : 'Ver y vender') : 'Ver' ?>
                             </a>
-                            <a href="form.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
+                            <?php if ($admin): ?>
+                                <a href="form.php?id=<?= e($id) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

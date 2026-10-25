@@ -6,12 +6,25 @@
  * funciones generales que ya define alquileres.php (dinero(), texto(),
  * decimal(), idValido(), diaUtc(), hoyLocal(), codigoError(), diaLargo()...),
  * para no repetirlas. Aquí solo vive lo propio de actividades, ventas y rifas.
+ *
+ * Control de acceso del módulo (Seguimiento 3, Issue #80):
+ *   - Cualquier usuario con sesión entra a las páginas de consulta.
+ *   - Administración ve y hace todo. La comunidad ve las actividades, sus
+ *     totales y qué números de rifa quedan libres, pero no los nombres de
+ *     quienes compraron ni el listado de ventas individuales.
+ *   - Las páginas que cambian datos agregan requiereRol('admin'): el permiso
+ *     se valida en el servidor, no solo escondiendo botones.
  */
+
+// alquileres.php manda a la comunidad a su calendario; este módulo tiene su propio control.
+define('ACCESO_PROPIO', true);
 
 require_once __DIR__ . '/alquileres.php';   // conexión, layout y funciones generales
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
+
+requiereLogin();
 
 /** Deben coincidir con el enum del JSON Schema (scripts/crear_colecciones_ventas.js). */
 const TIPOS_ACTIVIDAD   = ['turno' => 'Turno', 'feria' => 'Feria', 'rifa' => 'Rifa'];
