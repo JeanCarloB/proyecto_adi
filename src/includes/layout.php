@@ -83,6 +83,7 @@ if (esAdmin()) {
     // Calendario y Solicitudes ve su propia vista (calendario público y sus solicitudes).
     if ($usuario && $usuario['rol'] !== 'admin') {
         unset($enlaces['espacios'], $enlaces['reservas'], $enlaces['calendario'], $enlaces['solicitudes']);
+        unset($enlaces['ventas']);   // el listado de ventas tiene nombres de compradores: solo la junta
         $enlaces = ['publico' => ['Alquiler de espacios', 'src/publico/calendario.php', 'alquileres']] + $enlaces;
     }
     ?>

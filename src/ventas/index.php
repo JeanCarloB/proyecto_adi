@@ -5,8 +5,16 @@
  * Filtrar por actividad y rango de fechas aprovecha el índice compuesto
  * {actividad_id, fecha}. El resumen (cantidad y total) se calcula con
  * aggregation pipeline sobre todo el filtro, no solo sobre las filas visibles.
+ *
+ * Solo administración (Issue #80): cada venta puede llevar el nombre de quien
+ * compró. La comunidad ve los totales de cada actividad en actividades/.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
+
+if (!esAdmin()) {
+    header('Location: ../actividades/index.php');
+    exit;
+}
 
 const LIMITE = 200;
 
