@@ -85,3 +85,31 @@ mongosh "<URI personal de Atlas>" --file scripts/medir_alquileres.js
 - **Bandeja de solicitudes.** Con `{estado, creada}` las pendientes ya salen ordenadas de la más antigua a la más nueva. Sin índice aparece una etapa **`SORT` en memoria**, que crece con la cantidad de solicitudes.
 - **Sobre los tiempos.** Con 389 reservas todo responde en 0–2 ms con índice y sin índice: la colección cabe completa en memoria. La diferencia que sí se ve es cuántos documentos se leen, y el tiempo crece con esa cantidad. Es lo mismo que muestra la medición de `ventas` de arriba, donde con 100 000 documentos el índice baja el tiempo entre 10 y 46 veces. Una ADI real acumula reservas año tras año, así que el `COLLSCAN` se vuelve más caro con el tiempo, mientras que con el índice se lee siempre solo el mes pedido.
 
+
+---
+
+## Módulo de ventas (Issues #36 y #82)
+
+Mide tres consultas de las pantallas de ventas, actividades y rifas, cada una con su índice y sin índice (`hint({$natural: 1})`). Cada caso se corre 3 veces y se reporta la mediana. Complementa la medición general de arriba, que ya cubre el total recaudado por actividad y las ventas de un día.
+
+```bash
+mongosh "<URI personal de Atlas>/adi_prueba" --file scripts/medir_ventas.js
+```
+
+El script revisa antes que existan los índices del módulo y elige solo la actividad con más ventas y la rifa con más números vendidos.
+
+| Consulta | Pantalla | Índice | Qué se espera ver |
+| --- | --- | --- | --- |
+| `$match` + `$sort {fecha: -1}` + `$limit 200` + `$lookup` a actividades y contactos | Listado de ventas (junta) | `{fecha: -1}` | Con índice se leen solo las 200 ventas más recientes, sin `SORT`. Sin índice se leen las 100 000 y se ordenan en memoria (`SORT` → `COLLSCAN`) |
+| `$match` de una actividad + `$unwind` de `items` + `$group` por producto | Detalle de turno o feria | `{actividad_id, fecha}` | Con índice se leen solo las ventas de esa actividad. Sin índice, las 100 000 |
+| `find {rifa_id}` con proyección `{_id: 0, numero: 1}` | Cuadrícula de la rifa (comunidad) | único `{rifa_id, numero}` | Con índice: `PROJECTION_COVERED`, **0 documentos leídos**. Sin índice se leen todos los números de todas las rifas |
+
+### Resultados en Atlas
+
+> **Pendiente:** correr `scripts/medir_ventas.js` en Atlas y pegar aquí la tabla que imprime al final, con las corridas individuales.
+
+### Lectura
+
+- **Listado de ventas.** Es la primera pantalla que abre la junta y no filtra por actividad, así que el índice `{actividad_id, fecha}` no le sirve: `fecha` no es su primer campo. Antes del índice `{fecha: -1}` (PR del Issue #82), cada vez que se abría la página se leían y ordenaban las 100 000 ventas para mostrar 200. Además, `$match`, `$sort` y `$limit` van antes de los `$lookup`, así que los `$lookup` buscan el nombre de la actividad y del contacto solo para esas 200 ventas, siempre por `_id`, que tiene índice.
+- **Productos más vendidos.** El `$unwind` multiplica los documentos (una venta con 3 productos se vuelve 3), así que conviene que entren al pipeline solo los de la actividad. El índice `{actividad_id, fecha}` hace ese filtro antes del `$unwind`.
+- **Rifa para la comunidad.** La página de la comunidad no necesita saber quién compró cada número, solo cuáles están vendidos. Con la proyección `{_id: 0, numero: 1}`, los dos campos que se usan (`rifa_id` para filtrar, `numero` para devolver) están en el índice único, así que MongoDB responde sin abrir ningún documento. Es más rápido y, además, la consulta no puede traer el comprador aunque la vista tuviera un error. Es la misma idea del calendario público de alquileres.
