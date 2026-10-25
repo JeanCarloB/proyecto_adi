@@ -10,7 +10,7 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P4 | Alquileres: dos reservas simultáneas del mismo horario | OK | 2026-10-22 | Hazel |
 | P5 | Alquileres: un apartado vence solo (TTL) y libera el horario | OK | 2026-10-22 | Hazel |
 | P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK (11 de 11) | | Hazel |
-| P7 | Ventas: dos ventas simultáneas del mismo número de rifa | _Pendiente en Atlas_ | | Kendall |
+| P7 | Ventas: dos ventas simultáneas del mismo número de rifa | OK | 2026-10-25 | Kendall |
 | P8 | Ventas: datos inválidos, número repetido y actividad finalizada | OK (12 de 12, local) | 2026-10-24 | Kendall |
 | P9 | Ventas: acceso según el rol y token CSRF (sin sesión, comunidad, admin) | OK (12 de 12, local) | 2026-10-24 | Kendall |
 
@@ -176,9 +176,21 @@ El script lanza **dos procesos PHP en paralelo** (`Start-Job`). Cada uno abre su
 
 **Variante en la interfaz:** abrir la misma rifa en dos navegadores con sesión de administración, elegir el mismo número y tocar "Vender número" casi a la vez. Uno lo vende y el otro muestra "El número ya se vendió…" ([captura](capturas/s3-ventas-rifa-repetido.png)).
 
-**Resultado obtenido:** _(pendiente: correr en Atlas y pegar la salida)_
+**Resultado obtenido (2026-10-25, desde el servidor del curso contra Atlas M0 Oregon, 5 rondas):** ✅
 
-La mecánica del script se validó en local con el driver real de PHP: 3 rondas, 3 vendidos y 3 rechazados con 11000.
+Se corrió en el servidor con un bucle de `bash` equivalente al `.ps1`: cada ronda prepara la rifa, lanza los dos procesos con `&` y espera a ambos.
+
+| Ronda | Proceso A | Proceso B | Salida respecto al instante acordado (A / B) | Tiempo del insert (A / B) |
+| --- | --- | --- | --- | --- |
+| 1 | Rechazado (11000) | Vendido | +0 ms / +1 ms | 7 / 7 ms |
+| 2 | Rechazado (11000) | Vendido | +1 ms / +0 ms | 6 / 7 ms |
+| 3 | Rechazado (11000) | Vendido | +1 ms / +1 ms | 7 / 6 ms |
+| 4 | Vendido | Rechazado (11000) | +0 ms / +0 ms | 7 / 7 ms |
+| 5 | Rechazado (11000) | Vendido | +1 ms / +1 ms | 6 / 6 ms |
+
+Al final: *"Limpieza: rifa de prueba y 1 número(s) eliminados"*.
+
+**Lectura:** los dos procesos salieron con a lo sumo 1 ms de diferencia, es decir, prácticamente al mismo tiempo, y en cada ronda **exactamente uno** vendió el número 99: 5 vendidos y 5 rechazados. El ganador cambia (B en las rondas 1, 2, 3 y 5; A en la 4), así que es una carrera real y no un orden fijo. Nunca quedó el mismo número vendido dos veces: lo garantiza el índice único `{rifa_id, numero}`, no el código PHP. Al terminar, la limpieza dejó solo un número, así que la rifa de prueba nunca tuvo un duplicado.
 
 ## P8 · Datos inválidos, número repetido y actividad finalizada
 
