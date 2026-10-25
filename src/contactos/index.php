@@ -5,8 +5,21 @@
 require_once dirname(__DIR__) . '/includes/contactos.php';
 
 // Obtener los contactos de MongoDB
+// Obtener los contactos junto con su historial de seguimientos.
 $contactos = $baseDatos->selectCollection('contactos')
-    ->find([], ['sort' => ['nombre' => 1]])
+    ->aggregate([
+        [
+            '$lookup' => [
+                'from' => 'seguimientos',
+                'localField' => '_id',
+                'foreignField' => 'contacto_id',
+                'as' => 'historial',
+            ],
+        ],
+        [
+            '$sort' => ['nombre' => 1],
+        ],
+    ])
     ->toArray();
 
 // Indicadores del encabezado (se calculan sobre la lista ya cargada)
@@ -125,6 +138,8 @@ if (($_GET['desactivado'] ?? '') === '1') {
                             </span>
                         </td>
                         <td class="text-end text-nowrap">
+                            <a href="historial.php?id=<?= urlencode((string) $contacto['_id']) ?>"
+   							   class="btn btn-sm adi-btn-ghost">Historial</a>
                             <a href="editar.php?id=<?= urlencode((string) $contacto['_id']) ?>"
                                class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($activo): ?>

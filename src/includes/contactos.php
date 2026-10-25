@@ -8,7 +8,7 @@
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/layout.php';   // RAIZ, e(), encabezado(), pie(), avisos
 
-requiereLogin();   // todas las páginas del módulo exigen sesión
+requiereRol('admin');   // solo administración puede utilizar el módulo;   
 
 /** Tipos de contacto y cómo se muestran. */
 const TIPOS_CONTACTO = [

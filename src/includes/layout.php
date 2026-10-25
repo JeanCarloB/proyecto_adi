@@ -55,16 +55,29 @@ function e(mixed $valor): string
 function encabezado(string $titulo, string $seccion = ''): void
 {
     $enlaces = [
-        'espacios'    => ['Espacios',    'src/espacios/index.php',      'alquileres'],
-        'reservas'    => ['Reservas',    'src/reservas/index.php',      'alquileres'],
-        'calendario'  => ['Calendario',  'src/reservas/calendario.php', 'alquileres'],
-        'solicitudes' => ['Solicitudes', 'src/reservas/solicitudes.php', 'alquileres'],
-        'actividades' => ['Actividades', 'src/actividades/index.php',   'ventas'],
-        'ventas'      => ['Ventas',      'src/ventas/index.php',        'ventas'],
-        'contactos'   => ['Contactos',   'src/contactos/index.php',     'contactos'],
-        'seguimientos' => ['Seguimientos', 'src/seguimientos/index.php', 'contactos'],
+    'espacios'    => ['Espacios',    'src/espacios/index.php',      'alquileres'],
+    'reservas'    => ['Reservas',    'src/reservas/index.php',      'alquileres'],
+    'calendario'  => ['Calendario',  'src/reservas/calendario.php', 'alquileres'],
+    'solicitudes' => ['Solicitudes', 'src/reservas/solicitudes.php', 'alquileres'],
+    'actividades' => ['Actividades', 'src/actividades/index.php',   'ventas'],
+    'ventas'      => ['Ventas',      'src/ventas/index.php',        'ventas'],
+];
+
+if (esAdmin()) {
+    $enlaces['contactos'] = [
+        'Contactos',
+        'src/contactos/index.php',
+        'contactos'
     ];
+
+    $enlaces['seguimientos'] = [
+        'Seguimientos',
+        'src/seguimientos/index.php',
+        'contactos'
+    ];
+}
     $usuario = usuarioActual();
+
 
     // La comunidad no administra alquileres: en lugar de Espacios, Reservas,
     // Calendario y Solicitudes ve su propia vista (calendario público y sus solicitudes).
