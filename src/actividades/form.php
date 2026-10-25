@@ -40,6 +40,9 @@ if ($editar) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrfValido()) {
+        rechazarCsrf();   // no vino de este formulario: no se guarda nada
+    }
     $nombre = texto($_POST['nombre'] ?? '');
     $tipo   = $conMovimientos ? $actividad['tipo'] : texto($_POST['tipo'] ?? '');
     $fecha  = texto($_POST['fecha'] ?? '');
@@ -104,6 +107,7 @@ encabezado($titulo, 'actividades');
     <?php listaErrores($errores); ?>
 
     <form method="POST" class="adi-card adi-card-body">
+        <?= campoCsrf() ?>
         <?php if ($editar): ?>
             <input type="hidden" name="id" value="<?= e($id) ?>">
         <?php endif; ?>

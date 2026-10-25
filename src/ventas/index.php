@@ -174,6 +174,7 @@ if (($_GET['error'] ?? '') === 'cerrada') {
                                 <a href="form.php?id=<?= e($v['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                                 <form action="anular.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Anular esta venta? Dejará de sumar al total.');">
+                                    <?= campoCsrf() ?>
                                     <input type="hidden" name="id" value="<?= e($v['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
                                 </form>

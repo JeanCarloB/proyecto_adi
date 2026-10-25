@@ -106,6 +106,7 @@ encabezado($actividad['nombre'], 'actividades');
               onsubmit="return confirm('<?= $abierta
                   ? '¿Finalizar la actividad? Ya no se podrán registrar ni cambiar ventas.'
                   : '¿Reabrir la actividad? Volverá a aceptar ventas.' ?>');">
+            <?= campoCsrf() ?>
             <input type="hidden" name="id" value="<?= e($id) ?>">
             <input type="hidden" name="estado" value="<?= $abierta ? 'finalizada' : 'programada' ?>">
             <button type="submit" class="btn <?= $abierta ? 'adi-btn-quiet-danger' : 'adi-btn-soft' ?>">
@@ -245,6 +246,7 @@ if (isset($mensajesError[$error])) {
             <?php else: ?>
                 <form action="../rifas/vender.php" method="POST" class="adi-card adi-card-body">
                     <h2 class="adi-section-title">Vender un número</h2>
+                    <?= campoCsrf() ?>
                     <input type="hidden" name="rifa" value="<?= e($id) ?>">
                     <div class="mb-3">
                         <label for="numero" class="form-label">Número</label>
@@ -305,6 +307,7 @@ if (isset($mensajesError[$error])) {
                                 <?php if ($abierta): ?>
                                     <form action="../rifas/anular.php" method="POST" class="d-inline"
                                           onsubmit="return confirm('¿Anular el número <?= numeroRifa($n['numero']) ?>? Quedará libre otra vez.');">
+                                        <?= campoCsrf() ?>
                                         <input type="hidden" name="id" value="<?= e($n['_id']) ?>">
                                         <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
                                     </form>
@@ -375,6 +378,7 @@ if (isset($mensajesError[$error])) {
                                         <a href="../ventas/form.php?id=<?= e($v['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                                         <form action="../ventas/anular.php" method="POST" class="d-inline"
                                               onsubmit="return confirm('¿Anular esta venta? Dejará de sumar al total.');">
+                                            <?= campoCsrf() ?>
                                             <input type="hidden" name="id" value="<?= e($v['_id']) ?>">
                                             <input type="hidden" name="volver" value="actividad">
                                             <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
