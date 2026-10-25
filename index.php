@@ -49,16 +49,22 @@ $modulos = [
         ] : [],
         'enlaces' => ['Actividades' => 'src/actividades/index.php', 'Ventas' => 'src/ventas/index.php'],
     ],
-    [
+    ];
+
+if (esAdmin()) {
+    $modulos[] = [
         'modulo' => 'contactos',
         'texto'  => 'Vecinos, comercios e instituciones, con su historial y recordatorios.',
         'datos'  => $resumen ? [
-            'Contactos activos'        => $resumen['contactos'],
-            'Seguimientos pendientes'  => $resumen['pendientes'],
+            'Contactos activos'       => $resumen['contactos'],
+            'Seguimientos pendientes' => $resumen['pendientes'],
         ] : [],
-        'enlaces' => ['Contactos' => 'src/contactos/index.php', 'Seguimientos' => 'src/seguimientos/index.php'],
-    ],
-];
+        'enlaces' => [
+            'Contactos'    => 'src/contactos/index.php',
+            'Seguimientos' => 'src/seguimientos/index.php',
+        ],
+    ];
+}
 
 encabezado('Inicio');
 ?>
