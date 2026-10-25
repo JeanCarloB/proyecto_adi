@@ -235,10 +235,13 @@ if ($docs) {
 printf("\r  ventas: %d documentos (%.1f s)\n", $insertadas, microtime(true) - $inicio);
 
 // --- rifas (números del 00 al 99 sin repetir por rifa) --------------------
+// Cada rifa guarda su precio_numero (Issue #84). Se guarda después de elegir el
+// precio para no cambiar la secuencia de Faker: misma semilla, mismos datos.
 
 $docs = [];
 foreach ($actividades['rifa'] as $act) {
     $precio = $faker->randomElement([500, 1000, 2000]);
+    $db->actividades->updateOne(['_id' => $act['_id']], ['$set' => ['precio_numero' => dec($precio)]]);
     foreach ($faker->randomElements(range(0, 99), $faker->numberBetween(30, 90)) as $numero) {
         $docs[] = [
             'rifa_id'     => $act['_id'],

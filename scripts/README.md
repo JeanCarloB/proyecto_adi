@@ -37,7 +37,7 @@ php scripts/cargar_datos.php --limpiar --indices
 
 Sin `--limpiar`, el script se detiene si alguna colección ya tiene datos, para no duplicarlos.
 
-Cantidades: 3 espacios, 500 contactos, 60 actividades, 400 reservas, 100 000 ventas, ~900 números de rifa y 300 seguimientos. Los montos se guardan como `Decimal128` y las fechas como `UTCDateTime`. Las fechas van de 12 meses atrás a 3 meses adelante del día en que se ejecuta; las reservas apartadas vencen de 1 a 3 días después de la carga.
+Cantidades: 3 espacios, 500 contactos, 60 actividades, 400 reservas, 100 000 ventas, ~900 números de rifa y 300 seguimientos. Cada rifa trae su `precio_numero` (₡500, ₡1 000 o ₡2 000, el mismo que pagaron sus números), así que se puede vender desde la interfaz sin editarla antes. Los montos se guardan como `Decimal128` y las fechas como `UTCDateTime`. Las fechas van de 12 meses atrás a 3 meses adelante del día en que se ejecuta; las reservas apartadas vencen de 1 a 3 días después de la carga.
 
 El script solo corre por consola (`php` CLI) y la carpeta `scripts/` está bloqueada en Apache por `.htaccess`.
 
