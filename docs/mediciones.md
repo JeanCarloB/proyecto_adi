@@ -106,10 +106,25 @@ El script revisa antes que existan los índices del módulo y elige solo la acti
 
 ### Resultados en Atlas
 
-> **Pendiente:** correr `scripts/medir_ventas.js` en Atlas y pegar aquí la tabla que imprime al final, con las corridas individuales.
+Corrida del 2026-10-25 desde el servidor del curso contra Atlas M0 (AWS Oregon), base `adi` con 100 000 ventas y 420 números de rifa. Actividad medida: la de más ventas (2 027). Rifa medida: la de más números vendidos (86).
+
+| Consulta | Con índice: mediana ms | Docs leídos | Claves leídas | Plan | Sin índice: mediana ms | Docs leídos | Plan |
+| --- | ---: | ---: | ---: | --- | ---: | ---: | --- |
+| Listado de ventas de la junta (`$sort` + `$limit` + 2 `$lookup`) | 24 | 200 | 200 | LIMIT → PROJECTION_SIMPLE → FETCH → IXSCAN | 83 | 100 000 | PROJECTION_SIMPLE → **SORT** → COLLSCAN |
+| Productos más vendidos de una actividad (`$unwind` + `$group`) | 13 | 2 027 | 2 027 | PROJECTION_SIMPLE → FETCH → IXSCAN | 67 | 100 000 | PROJECTION_SIMPLE → COLLSCAN |
+| Cuadrícula de la rifa para la comunidad (proyección `{_id: 0, numero: 1}`) | 0 | **0** | 86 | **PROJECTION_COVERED** → IXSCAN | 0 | 420 | **SORT** → PROJECTION_SIMPLE → COLLSCAN |
+
+Corridas individuales (ms):
+
+| Consulta | Con índice | Sin índice |
+| --- | --- | --- |
+| Listado de ventas de la junta | 24 / 25 / 24 | 83 / 89 / 83 |
+| Productos más vendidos de una actividad | 14 / 13 / 13 | 67 / 67 / 67 |
+| Cuadrícula de la rifa para la comunidad | 0 / 0 / 0 | 0 / 0 / 0 |
 
 ### Lectura
 
-- **Listado de ventas.** Es la primera pantalla que abre la junta y no filtra por actividad, así que el índice `{actividad_id, fecha}` no le sirve: `fecha` no es su primer campo. Antes del índice `{fecha: -1}` (PR del Issue #82), cada vez que se abría la página se leían y ordenaban las 100 000 ventas para mostrar 200. Además, `$match`, `$sort` y `$limit` van antes de los `$lookup`, así que los `$lookup` buscan el nombre de la actividad y del contacto solo para esas 200 ventas, siempre por `_id`, que tiene índice.
+- **Resumen.** Con índice, el listado de ventas lee **200** documentos en lugar de 100 000 y baja de 83 a 24 ms, unas 3,5 veces menos. Los productos más vendidos leen **2 027** en lugar de 100 000 y bajan de 67 a 13 ms, unas 5 veces menos. La rifa de la comunidad no abre **ningún** documento.
+- **Listado de ventas.** Es la primera pantalla que abre la junta y no filtra por actividad, así que el índice `{actividad_id, fecha}` no le sirve: `fecha` no es su primer campo. Antes del índice `{fecha: -1}` (PR del Issue #82), cada vez que se abría la página se leían y ordenaban las 100 000 ventas para mostrar 200: es la etapa `SORT` del plan sin índice. Con el índice, el `LIMIT` corta en las primeras 200 entradas y no hay que ordenar nada. Además, `$match`, `$sort` y `$limit` van antes de los `$lookup`, así que los `$lookup` buscan el nombre de la actividad y del contacto solo para esas 200 ventas, siempre por `_id`, que tiene índice.
 - **Productos más vendidos.** El `$unwind` multiplica los documentos (una venta con 3 productos se vuelve 3), así que conviene que entren al pipeline solo los de la actividad. El índice `{actividad_id, fecha}` hace ese filtro antes del `$unwind`.
-- **Rifa para la comunidad.** La página de la comunidad no necesita saber quién compró cada número, solo cuáles están vendidos. Con la proyección `{_id: 0, numero: 1}`, los dos campos que se usan (`rifa_id` para filtrar, `numero` para devolver) están en el índice único, así que MongoDB responde sin abrir ningún documento. Es más rápido y, además, la consulta no puede traer el comprador aunque la vista tuviera un error. Es la misma idea del calendario público de alquileres.
+- **Rifa para la comunidad.** La página de la comunidad no necesita saber quién compró cada número, solo cuáles están vendidos. Con la proyección `{_id: 0, numero: 1}`, los dos campos que se usan (`rifa_id` para filtrar, `numero` para devolver) están en el índice único, así que MongoDB responde sin abrir ningún documento: 86 claves leídas del índice y **0 documentos**, con la etapa `PROJECTION_COVERED`. Sin índice lee los 420 números de todas las rifas y tiene que ordenarlos (`SORT`). Con tan pocos datos el tiempo es 0 ms en los dos casos, pero la diferencia en documentos leídos crece con cada rifa nueva. Es más rápido y, además, la consulta no puede traer el comprador aunque la vista tuviera un error. Es la misma idea del calendario público de alquileres.
