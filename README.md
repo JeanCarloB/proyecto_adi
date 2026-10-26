@@ -134,7 +134,7 @@ Variables de entorno (`.env.example`):
 | `MONGODB_URI` | Cadena de conexión del clúster de Atlas. **Nunca se sube al repositorio.** |
 | `MONGODB_DB` | Nombre de la base de datos (`adi`). |
 
-Verificación: abrir `diagnostico.php` en el navegador. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK.
+Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK. Sin sesión se ven las cinco primeras; la escritura y los detalles de la base solo los ve administración.
 
 **Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`.
 

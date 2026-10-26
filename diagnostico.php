@@ -1,5 +1,14 @@
 <?php
 // Verificación del entorno: PHP, extensión mongodb, Composer, .env, conexión y escritura en Atlas.
+//
+// Cualquiera puede ver si cada verificación sale OK o Falla (sirve aunque Atlas
+// no responda y nadie pueda iniciar sesión). La prueba de escritura, las
+// colecciones, las últimas conexiones y el texto del error solo se muestran
+// con sesión de admin: así una visita anónima no escribe en la base ni ve
+// cómo está armada.
+require_once __DIR__ . '/src/includes/layout.php';   // sesion.php: esAdmin() no necesita la base
+$admin = esAdmin();
+
 $checks = [];
 
 // 1. PHP y extensión
@@ -38,26 +47,29 @@ if (file_exists($autoload) && !empty($env['MONGODB_URI'])) {
         $client->selectDatabase('admin')->command(['ping' => 1]);
         $conexion = true;
 
-        // Prueba de escritura: registra la visita (también crea la base si no existe)
-        $usuario = parse_url($env['MONGODB_URI'], PHP_URL_USER) ?: 'desconocido';
-        $estado = $client->selectDatabase($dbName)->selectCollection('estado');
-        $estado->insertOne([
-            'usuario' => $usuario,
-            'origen'  => gethostname(),
-            'fecha'   => new MongoDB\BSON\UTCDateTime(),
-        ]);
-        $escritura = true;
-        $ultimas = $estado->find([], ['sort' => ['fecha' => -1], 'limit' => 5])->toArray();
+        if ($admin) {
+            // Prueba de escritura: registra la visita (también crea la base si no existe)
+            $usuario = parse_url($env['MONGODB_URI'], PHP_URL_USER) ?: 'desconocido';
+            $estado = $client->selectDatabase($dbName)->selectCollection('estado');
+            $estado->insertOne([
+                'usuario' => $usuario,
+                'origen'  => gethostname(),
+                'fecha'   => new MongoDB\BSON\UTCDateTime(),
+            ]);
+            $escritura = true;
+            $ultimas = $estado->find([], ['sort' => ['fecha' => -1], 'limit' => 5])->toArray();
 
-        foreach ($client->selectDatabase($dbName)->listCollections() as $c) {
-            $colecciones[] = $c->getName();
+            foreach ($client->selectDatabase($dbName)->listCollections() as $c) {
+                $colecciones[] = $c->getName();
+            }
         }
     } catch (Throwable $e) {
         $error = $e->getMessage();
     }
 }
 $checks[] = ['Conexión a MongoDB Atlas', $conexion];
-$checks[] = ['Escritura en la base', $escritura];
+// null: sin sesión de admin no se prueba (se muestra "Solo admin")
+$checks[] = ['Escritura en la base', $admin ? $escritura : null];
 ?>
 <!doctype html>
 <html lang="es">
@@ -76,12 +88,23 @@ $checks[] = ['Escritura en la base', $escritura];
       <?php foreach ($checks as [$label, $ok]): ?>
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <?= htmlspecialchars($label) ?>
-          <span class="badge <?= $ok ? 'bg-success' : 'bg-danger' ?>"><?= $ok ? 'OK' : 'Falla' ?></span>
+          <?php if ($ok === null): ?>
+            <span class="badge bg-secondary">Solo admin</span>
+          <?php else: ?>
+            <span class="badge <?= $ok ? 'bg-success' : 'bg-danger' ?>"><?= $ok ? 'OK' : 'Falla' ?></span>
+          <?php endif; ?>
         </li>
       <?php endforeach; ?>
     </ul>
 
-    <?php if ($conexion): ?>
+    <?php if (!$admin): ?>
+      <p class="text-muted small">
+        La prueba de escritura y los detalles de la base solo se muestran a administración.
+        <a href="login.php?volver=<?= urlencode($_SERVER['REQUEST_URI'] ?? '') ?>">Iniciar sesión</a>
+      </p>
+    <?php endif; ?>
+
+    <?php if ($conexion && $admin): ?>
       <div class="alert alert-success">
         Conectado a la base <strong><?= htmlspecialchars($dbName) ?></strong>.
         Colecciones: <?= $colecciones ? htmlspecialchars(implode(', ', $colecciones)) : 'ninguna todavía' ?>.
@@ -102,8 +125,10 @@ $checks[] = ['Escritura en la base', $escritura];
         </table>
       <?php endif; ?>
     <?php endif; ?>
-    <?php if ($error): ?>
+    <?php if ($error && $admin): ?>
       <div class="alert alert-danger"><strong>Error:</strong> <?= htmlspecialchars($error) ?></div>
+    <?php elseif ($error): ?>
+      <div class="alert alert-danger">No se pudo conectar con la base de datos.</div>
     <?php endif; ?>
   </main>
 </body>

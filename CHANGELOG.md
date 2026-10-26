@@ -7,6 +7,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ### Agregado
 - **Seguridad:** inicio y cierre de sesión (`login.php`, `logout.php`) contra la colección `usuarios` con `password_verify`, y permisos por rol en `src/includes/sesion.php`: todas las páginas exigen sesión y el backend solo deja al rol `admin` crear, editar, anular o borrar (responde 403 a `comunidad`). Ocultar los botones en cada módulo queda a cargo de sus responsables.
+- **Seguridad:** token CSRF (`exigirCsrf()` en `src/includes/sesion.php`) en todos los formularios de administración de contactos, seguimientos, espacios y reservas: un POST sin el token de su formulario responde 400 y no cambia nada. Ventas ya lo valida con `exigirAccionAdmin()` (PR #88).
 - `scripts/crear_usuarios_prueba.php`: usuarios ficticios `admin@example.com` y `comunidad@example.com` para probar el login.
 - **Ventas:** vistas de administración y comunidad. La comunidad ve actividades, totales y números libres, sin acciones ni nombres de compradores (PR #87; Issue #80).
 - **Ventas:** token CSRF en todas las acciones de administración y validación estricta del estado de la actividad (PR #88; Issue #81).
@@ -18,6 +19,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 ### Corregido
 - **Ventas:** una cuenta de comunidad que abría Actividades o Ventas terminaba en el calendario de alquileres (PR #87).
 - **Carga de datos:** las rifas generadas por `cargar_datos.js` y `cargar_datos.php` traen `precio_numero` y se pueden vender sin editarlas (PR #93; Issue #84).
+
+### Cambiado
+- `diagnostico.php` ya no escribe en la base con visitas anónimas: la prueba de escritura, las colecciones, las últimas conexiones y el texto del error solo se muestran con sesión de admin.
 
 ## [0.2.0] - Seguimiento 2
 

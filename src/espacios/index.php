@@ -71,6 +71,7 @@ avisoExito([
                           onsubmit="return confirm('<?= $activo
                               ? '¿Desactivar este espacio? Ya no se podrá reservar.'
                               : '¿Volver a activar este espacio?' ?>');">
+                        <?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?= e($espacio['_id']) ?>">
                         <input type="hidden" name="activo" value="<?= $activo ? '0' : '1' ?>">
                         <button type="submit" class="btn btn-sm <?= $activo ? 'adi-btn-quiet-danger' : 'adi-btn-soft' ?>">

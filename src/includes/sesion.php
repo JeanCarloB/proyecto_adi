@@ -175,3 +175,28 @@ function csrfValido(): bool
     $token = $_POST['csrf'] ?? '';
     return is_string($token) && hash_equals(tokenCsrf(), $token);
 }
+
+/**
+ * Corta un POST que no trae el token CSRF de su formulario: así una página
+ * de otro sitio no puede hacer que el navegador de alguien de la junta
+ * guarde, cancele o borre algo sin que lo sepa. En un GET no hace nada.
+ * Uso, después de requiereRol(): exigirCsrf();
+ * El formulario debe llevar <?= campoCsrf() ?>.
+ */
+function exigirCsrf(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || csrfValido()) {
+        return;
+    }
+
+    http_response_code(400);
+    encabezado('Formulario vencido');
+    ?>
+    <div class="adi-form-narrow">
+        <?php aviso('warn', 'El formulario venció o no vino de esta página, así que no se hizo ningún cambio. Vuelva a la página, recárguela e intente de nuevo.'); ?>
+        <a href="<?= RAIZ ?>index.php" class="btn adi-btn-soft">Volver al inicio</a>
+    </div>
+    <?php
+    pie();
+    exit;
+}

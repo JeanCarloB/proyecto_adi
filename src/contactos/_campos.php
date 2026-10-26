@@ -6,6 +6,7 @@
  */
 ?>
 <form method="POST" class="adi-card adi-card-body">
+    <?= campoCsrf() ?>
     <div class="row g-3 mb-4">
         <div class="col-sm-8">
             <label for="nombre" class="form-label">Nombre completo o entidad *</label>
