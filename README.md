@@ -29,8 +29,9 @@ De ahí salen cuatro problemas que cuestan dinero y credibilidad:
 | --- | --- |
 | **Junta directiva de la ADI** | Ver el calendario de los espacios, confirmar pagos, revisar el total recaudado por actividad y consultar el historial de un contacto. |
 | **Voluntarios de la ADI** | Registrar reservas, anotar ventas durante un turno o una feria y vender números de rifa. |
+| **Comunidad (vecinos)** | Ver el calendario público de los espacios, pedir una reserva que la junta aprueba o rechaza, y consultar las actividades y los números de rifa libres. |
 
-El sistema es de uso interno: no hay un portal público donde el vecino reserve por su cuenta. Eso queda en el roadmap.
+Cada persona entra con su cuenta y un rol: `admin` (junta y voluntarios) o `comunidad` (vecinos). El servidor revisa el rol en cada acción: una cuenta de comunidad no puede crear, editar ni borrar nada aunque escriba la dirección de la página. El vecino no reserva directo ni paga en línea: su solicitud la confirma la junta.
 
 ## 3. Alcance del MVP
 
@@ -133,10 +134,13 @@ Variables de entorno (`.env.example`):
 | --- | --- |
 | `MONGODB_URI` | Cadena de conexión del clúster de Atlas. **Nunca se sube al repositorio.** |
 | `MONGODB_DB` | Nombre de la base de datos (`adi`). |
+| `ALTCHA_HMAC_KEY` | Clave secreta del captcha del login y de las solicitudes (texto aleatorio de 32 caracteres o más). **Nunca se sube al repositorio.** |
 
 Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK. Sin sesión se ven las cinco primeras; la escritura y los detalles de la base solo los ve administración.
 
-**Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`.
+**Cuentas de prueba:** `php scripts/crear_usuarios_prueba.php` crea `admin@example.com` y `comunidad@example.com` para probar el login y los permisos.
+
+**Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`. Las contraseñas se guardan con `password_hash`, los permisos por rol se validan en el servidor y los formularios de administración llevan token CSRF (ver [`docs/decisiones.md`](docs/decisiones.md#inicio-de-sesión-y-permisos-issues-96-97-y-98)).
 
 ## 7. Estructura del repositorio
 
@@ -145,10 +149,13 @@ Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las
 ├── src/                    Código de la aplicación
 ├── docs/
 │   ├── arquitectura/       Diagramas de arquitectura y modelo de datos
+│   ├── capturas/           Capturas de pantalla de cada seguimiento
 │   ├── seguimientos/       Bitácoras S1.md a S4.md
+│   ├── decisiones.md       Decisiones técnicas generales y de cada módulo
 │   ├── instalacion.md      Instalación desde cero
 │   ├── mediciones.md       Mediciones con y sin índice (explain)
-│   └── pruebas.md          Pruebas documentadas
+│   ├── pruebas.md          Pruebas documentadas
+│   └── ventas.md           Guía del módulo de ventas y guion de su demo
 ├── data/                   Datos de prueba
 ├── scripts/                Carga de datos sintéticos y mediciones
 ├── CHANGELOG.md            Cambios por versión
@@ -156,7 +163,9 @@ Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las
 ├── .htaccess               Bloqueo web de archivos sensibles
 ├── composer.json           Dependencias PHP
 ├── diagnostico.php         Verificación de entorno y conexión
-└── index.php               Portada con acceso a los módulos
+├── index.php               Portada con acceso a los módulos
+├── login.php               Inicio de sesión con captcha
+└── logout.php              Cierre de sesión
 ```
 
 ## 8. Flujo de trabajo
@@ -215,18 +224,45 @@ Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK.
 | Hazel Molina | Alquiler de espacios | Colecciones `espacios` y `reservas`, índice único anti-doble alquiler, índice TTL de apartados, CRUD y calendario |
 | Kendall | Ventas en actividades | Colecciones `actividades`, `ventas` y `rifas`, venta de rifas con índice único, aggregation del total por actividad |
 | María | Contactos y relaciones | Colecciones `contactos` y `seguimientos`, historial con `$lookup`, recordatorios, comparación embebido vs. referencias |
-| Jean Carlo Bermúdez | Infraestructura, datos y calidad | Repositorio, clúster Atlas, servidor, generador de 100 000 ventas sintéticas, mediciones con `explain()` y pruebas |
+| Jean Carlo Bermúdez | Infraestructura, integración y seguridad | Repositorio, clúster Atlas, servidor, generador de 100 000 ventas sintéticas, mediciones con `explain()`, pruebas, login con roles y permisos |
 
 ## 10. Estado del proyecto
 
 | Seguimiento | Semana | Entregable | Estado |
 | --- | --- | --- | --- |
-| S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | Entregado |
-| S2 | 14 | Núcleo funcional · `v0.2.0` | Entregado |
-| S3 | 15 | Integración, pruebas y medición · `v0.3.0` | Pendiente |
-| S4 | 16 | Release candidate · `v0.9.0` | Pendiente |
+| S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | Entregado · [bitácora](docs/seguimientos/S1.md) |
+| S2 | 14 | Núcleo funcional · `v0.2.0` | Entregado · [bitácora](docs/seguimientos/S2.md) |
+| S3 | 15 | Integración, pruebas y medición · `v0.3.0` | Entregado · [bitácora](docs/seguimientos/S3.md) |
+| S4 | 16 | Release candidate · `v0.9.0` | En curso |
 
-Las bitácoras de cada seguimiento están en `docs/seguimientos/` y los cambios por versión en [`CHANGELOG.md`](CHANGELOG.md).
+Los cambios por versión están en [`CHANGELOG.md`](CHANGELOG.md).
+
+### Documentación
+
+| Documento | Qué tiene |
+| --- | --- |
+| [`docs/instalacion.md`](docs/instalacion.md) | Instalación paso a paso y solución de problemas |
+| [`docs/decisiones.md`](docs/decisiones.md) | Por qué el modelo, los índices y la seguridad quedaron así |
+| [`docs/mediciones.md`](docs/mediciones.md) | Consultas con y sin índice: `explain()`, 3 corridas y mediana |
+| [`docs/pruebas.md`](docs/pruebas.md) | Pruebas P1 a P9 con pasos, resultado esperado y obtenido |
+| [`docs/ventas.md`](docs/ventas.md) | Guía del módulo de ventas y guion de su demo |
+| [`docs/seguimientos/`](docs/seguimientos/) | Bitácoras S1 a S4 |
+
+### Capturas
+
+| Alquileres | Ventas |
+| --- | --- |
+| ![Calendario público de los espacios](docs/capturas/s3-alquileres-publico.png) | ![Actividades vistas por la comunidad](docs/capturas/s3-ventas-comunidad-actividades.png) |
+| Calendario público: la comunidad ve qué horarios están ocupados, sin datos de las personas. | Actividades para la comunidad: totales y números libres, sin acciones ni compradores. |
+| ![Horario ya ocupado](docs/capturas/s2-alquileres-doble-reserva.png) | ![Cuadrícula de la rifa](docs/capturas/s3-ventas-comunidad-rifa.png) |
+| El índice único rechaza un segundo alquiler del mismo horario. | Rifa vista por la comunidad: los números vendidos salen tachados y no se pueden volver a vender. |
+
+| Contactos | Seguridad |
+| --- | --- |
+| ![Lista de contactos](docs/capturas/s2-contactos-listado.png) | ![Acción de administración negada a la comunidad](docs/capturas/s3-ventas-comunidad-403.png) |
+| Contactos de la ADI con acceso a su historial. | Una cuenta de comunidad que intenta una acción de administración recibe 403. |
+
+Más capturas en [`docs/capturas/`](docs/capturas/).
 
 ## 11. Roadmap
 

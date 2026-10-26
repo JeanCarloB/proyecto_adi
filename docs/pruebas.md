@@ -39,7 +39,7 @@ Comprueba que la aplicación falla de forma controlada, sin mostrar la URI ni la
 1. En `.env`, cambiar la contraseña de `MONGODB_URI` por una incorrecta.
 2. Abrir `diagnostico.php` (con la sesión de admin abierta antes de cambiar el `.env`).
 3. **Esperado:** "Conexión a MongoDB Atlas" y "Escritura en la base" en **Falla**, con un mensaje de autenticación; la página no se cae. Sin sesión, "Escritura" sale en **Solo admin** y el aviso dice "No se pudo conectar con la base de datos", sin el texto del error. La portada (`index.php`) muestra "No se pudo conectar con la base de datos" sin detalles de la URI.
-4. Abrir un módulo (por ejemplo `src/contactos/`). **Esperado:** mensaje de error, no una pantalla en blanco ni la URI.
+4. Abrir un módulo (por ejemplo `src/contactos/`). **Esperado:** en 5 s como máximo, página con el aviso "No se pudo conectar con la base de datos…" y código 503 (`src/includes/conexion.php`). No es una pantalla en blanco y no muestra la URI ni el host del clúster; el detalle queda en el log de errores del servidor.
 5. Restaurar el `.env`.
 
 **Variante B · IP no autorizada:** desde una red cuya IP no está en Network Access de Atlas, abrir `diagnostico.php`. **Esperado:** "Conexión" en **Falla** a los 5 s (`serverSelectionTimeoutMS`) con un error de selección de servidor.
