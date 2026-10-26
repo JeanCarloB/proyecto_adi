@@ -4,9 +4,9 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 
 | # | Caso | Resultado | Fecha | Responsable |
 | --- | --- | --- | --- | --- |
-| P1 | Caso normal: flujo completo | _(OK / falla)_ | | |
-| P2 | Error de conexión con Atlas | _(OK / falla)_ | | |
-| P3 | Datos inválidos rechazados | _(OK / falla)_ | | |
+| P1 | Caso normal: flujo completo | OK (7 de 7, local) | 2026-10-26 | Jean Carlo |
+| P2 | Error de conexión con la base | OK (3 variantes, local) | 2026-10-26 | Jean Carlo |
+| P3 | Datos inválidos rechazados | OK (7 de 7, local) | 2026-10-26 | Jean Carlo |
 | P4 | Alquileres: dos reservas simultáneas del mismo horario | OK | 2026-10-22 | Hazel |
 | P5 | Alquileres: un apartado vence solo (TTL) y libera el horario | OK | 2026-10-22 | Hazel |
 | P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK (11 de 11) | | Hazel |
@@ -28,7 +28,21 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 4. **Ventas:** crear una actividad tipo feria, registrar una venta con dos productos; el total de la venta es la suma de cantidad × precio y el total recaudado de la actividad aumenta.
 5. **Rifas:** en una actividad tipo rifa, vender un número libre; aparece como vendido.
 
-**Resultado obtenido:** _(completar con capturas)_
+**Resultado obtenido (2026-10-26, entorno local):** ✅ 7 de 7
+
+**Entorno:** PHP 8.3.6 con la extensión `mongodb` 2.4.0, MongoDB 8.0 local (replica set de un nodo) y el servidor integrado de PHP, con el `main` de `v0.3.0` y los datos de `scripts/cargar_datos.js` (semilla 2026, 100 000 ventas). **No** se corrió en el servidor del curso ni en Atlas. Las pantallas que dicen "Conexión a MongoDB Atlas" se refieren a la base configurada en el `.env`, que en esta corrida era la local.
+
+| Paso | Resultado | Captura |
+| --- | --- | --- |
+| Diagnóstico | Las 6 verificaciones en OK y la lista de las 11 colecciones | [s3-p1-diagnostico.png](capturas/s3-p1-diagnostico.png) |
+| Portada | Resumen de los tres módulos con sus enlaces | [s3-p1-portada.png](capturas/s3-p1-portada.png) |
+| Contacto | "Vecina Prueba P1" creada como vecino; el teléfono pasó de 8888-0001 a 8888-0002 | [s3-p1-contacto.png](capturas/s3-p1-contacto.png) |
+| Apartado | Salón comunal, 13 mar 2027, tarde: estado *Apartado* con "Vence" a 48 h y monto ₡30.000 | [s3-p1-apartado.png](capturas/s3-p1-apartado.png) |
+| Confirmar pago | Estado *Confirmado*; en la base, el documento ya no tiene `vence` | [s3-p1-confirmado.png](capturas/s3-p1-confirmado.png) |
+| Venta | Feria P1: 3 × Tamal a ₡1.500 + 2 × Café a ₡800 = ₡6.100; el total recaudado de la actividad pasó a ₡6.100 | [s3-p1-venta.png](capturas/s3-p1-venta.png) |
+| Rifa | Rifa P1 (₡1.000 por número): el 07 quedó vendido, 1 de 100, total ₡1.000 | [s3-p1-rifa.png](capturas/s3-p1-rifa.png) |
+
+**Falta:** repetir P1 en el servidor del curso contra Atlas para la tabla *Integración y servidor* de `docs/seguimientos/S3.md`.
 
 ## P2 · Error de conexión con Atlas
 
@@ -46,7 +60,21 @@ Comprueba que la aplicación falla de forma controlada, sin mostrar la URI ni la
 
 **Variante C · sin `.env`:** renombrar `.env` a `.env.bak`. **Esperado:** "Archivo .env con MONGODB_URI" en **Falla**.
 
-**Resultado obtenido:** _(completar)_
+**Resultado obtenido (2026-10-26, entorno local):** ✅ las 3 variantes
+
+**Entorno:** PHP 8.3.6 con la extensión `mongodb` 2.4.0, MongoDB 8.0 local (replica set de un nodo) y el servidor integrado de PHP, con el `main` de `v0.3.0` y los datos de `scripts/cargar_datos.js` (semilla 2026, 100 000 ventas). **No** se corrió en el servidor del curso ni en Atlas. Las pantallas que dicen "Conexión a MongoDB Atlas" se refieren a la base configurada en el `.env`, que en esta corrida era la local. Para cada variante se abrieron, con sesión de admin y sin sesión, `diagnostico.php`, la portada, `src/contactos/` y `src/reservas/`, y se revisó que el HTML no tuviera la URI ni el host de la base.
+
+| Variante | Qué se hizo | `diagnostico.php` | Portada | Módulos | Captura |
+| --- | --- | --- | --- | --- | --- |
+| A · Credenciales incorrectas | `MONGODB_URI` con un usuario y una contraseña que no existen | Conexión y escritura en **Falla**; con admin dice "Authentication failed."; sin sesión, "Solo admin" y "No se pudo conectar con la base de datos" | "No se pudo conectar con la base de datos" | **503** con el aviso, sin URI ni host | [admin](capturas/s3-p2-credenciales-diagnostico-admin.png) · [sin sesión](capturas/s3-p2-credenciales-diagnostico-anonimo.png) |
+| B · MongoDB apagado | Contenedor de MongoDB detenido | Conexión en **Falla** | "No se pudo conectar con la base de datos" | **503** con el aviso, sin URI ni host | [módulo](capturas/s3-p2-apagado-modulo.png) · [portada](capturas/s3-p2-apagado-portada.png) |
+| C · Sin `.env` | `.env` renombrado | "Archivo .env con MONGODB_URI" en **Falla** | "No se pudo conectar con la base de datos" | **503** con el aviso | [diagnóstico](capturas/s3-p2-sin-env-diagnostico.png) |
+
+Al restaurar el `.env` y encender la base, todo volvió a OK sin reiniciar nada. El detalle de cada error (`AuthenticationException`, `ConnectionTimeoutException`, `RuntimeException`) quedó solo en el log de PHP.
+
+**Observaciones:**
+- Con la base local apagada, el puerto rechaza la conexión de inmediato y el aviso sale en unos 30 ms. Contra Atlas con una IP no autorizada (variante B del enunciado) la espera es de hasta 5 s (`serverSelectionTimeoutMS`); esa variante falta probarla en Atlas.
+- Con sesión de admin, `diagnostico.php` muestra el texto del error del controlador, que puede incluir el host de la base. Es a propósito: solo lo ve administración.
 
 ## P3 · Datos inválidos rechazados
 
@@ -73,7 +101,17 @@ db.reservas.insertOne({ espacio_id: ObjectId(), contacto_id: ObjectId(), fecha: 
 
 **Esperado:** los tres inserts fallan con `Document failed validation` y no queda ningún documento nuevo.
 
-**Resultado obtenido:** _(completar)_
+**Resultado obtenido (2026-10-26, entorno local):** ✅ 7 de 7
+
+**Entorno:** PHP 8.3.6 con la extensión `mongodb` 2.4.0, MongoDB 8.0 local (replica set de un nodo) y el servidor integrado de PHP, con el `main` de `v0.3.0` y los datos de `scripts/cargar_datos.js` (semilla 2026, 100 000 ventas). **No** se corrió en el servidor del curso ni en Atlas. Las pantallas que dicen "Conexión a MongoDB Atlas" se refieren a la base configurada en el `.env`, que en esta corrida era la local. Para comprobar que el servidor valida aunque el navegador no lo haga, antes de enviar cada formulario se quitaron los atributos `required`, `min` y `pattern` del HTML.
+
+| Caso | Resultado | Captura |
+| --- | --- | --- |
+| Contacto sin nombre | "El nombre debe tener al menos 2 caracteres." No se guardó nada | [s3-p3-contacto.png](capturas/s3-p3-contacto.png) |
+| Venta con cantidad 0 | "La cantidad de la fila 1 debe ser un número entero entre 1 y 999." La feria siguió con 1 venta | [s3-p3-venta.png](capturas/s3-p3-venta.png) |
+| Misma reserva que en P1 (salón, 13 mar 2027, tarde) | "Ese horario ya está reservado." Sigue habiendo 1 reserva en ese horario | [s3-p3-reserva.png](capturas/s3-p3-reserva.png) |
+| Número 07 de la rifa vendido otra vez, desde una segunda pestaña abierta antes de la primera venta | "El número 07 ya se vendió. La base de datos no permite venderlo dos veces." Sigue habiendo 1 número vendido | [s3-p3-rifa.png](capturas/s3-p3-rifa.png) |
+| Los 3 inserts directos en `mongosh` | Los 3 fallan con `Document failed validation` (código 121); los conteos de `espacios`, `ventas` y `reservas` no cambian | [s3-p3-mongosh.png](capturas/s3-p3-mongosh.png) |
 
 ---
 

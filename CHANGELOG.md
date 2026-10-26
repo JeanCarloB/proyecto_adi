@@ -5,6 +5,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ## [Sin publicar]
 
+### Agregado
+- Resultados de las pruebas P1, P2 y P3 en `docs/pruebas.md`, corridas en un entorno local con MongoDB 8, con 17 capturas en `docs/capturas/` (Issue #50).
+
 ## [0.3.0] - Seguimiento 3
 
 ### Agregado
