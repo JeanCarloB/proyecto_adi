@@ -222,10 +222,15 @@
   print(`  ventas: ${insertadas} documentos (${((Date.now() - inicio) / 1000).toFixed(1)} s)`);
 
   // --- rifas (números del 00 al 99 sin repetir por rifa) -------------------
+  // Cada rifa guarda su precio_numero (Issue #84): sin él, la pantalla de la rifa
+  // no deja vender hasta que alguien la edite. Se guarda con un updateOne después
+  // de elegir el precio, para no cambiar la secuencia del generador: con la misma
+  // semilla, el resto de los datos sale idéntico a las cargas anteriores.
   const docsRifas = [];
   const cien = Array.from({ length: 100 }, (_, n) => n);
   for (const act of actividades.rifa) {
     const precio = elegir([500, 1000, 2000]);
+    db.actividades.updateOne({ _id: act._id }, { $set: { precio_numero: dec(precio) } });
     for (const numero of variosDe(cien, entero(30, 90))) {
       docsRifas.push({
         rifa_id: act._id,
