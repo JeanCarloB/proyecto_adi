@@ -9,14 +9,9 @@
  * Revisar primero y después insertar dejaría una ventana para el doble venta.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
-requiereRol('admin');
+exigirAccionAdmin();   // rol admin + POST + token CSRF
 
 use MongoDB\BSON\UTCDateTime;
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido.');
-}
 
 $rifa = buscarActividad($baseDatos, $_POST['rifa'] ?? '');
 if (!$rifa || $rifa['tipo'] !== 'rifa') {

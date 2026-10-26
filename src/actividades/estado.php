@@ -7,12 +7,7 @@
  * ya tiene, así el total recaudado que se reportó a la junta no se mueve.
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
-requiereRol('admin');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido.');
-}
+exigirAccionAdmin();   // rol admin + POST + token CSRF
 
 $id = idValido($_POST['id'] ?? '');
 if ($id === null) {
@@ -20,7 +15,12 @@ if ($id === null) {
     exit('El identificador de la actividad no es válido.');
 }
 
-$estado = ($_POST['estado'] ?? '') === 'finalizada' ? 'finalizada' : 'programada';
+// Solo los dos estados del JSON Schema; cualquier otro valor es un error, no "programada".
+$estado = texto($_POST['estado'] ?? '');
+if (!isset(ESTADOS_ACTIVIDAD[$estado])) {
+    http_response_code(400);
+    exit('Estado no válido.');
+}
 
 $baseDatos->selectCollection('actividades')->updateOne(
     ['_id' => $id],

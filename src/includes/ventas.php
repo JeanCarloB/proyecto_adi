@@ -47,6 +47,42 @@ const PRODUCTOS_SUGERIDOS = [
     'Arroz con pollo' => 3000, 'Copo' => 1000, 'Elote' => 800, 'Queque' => 1200,
 ];
 
+// --- Permisos ---------------------------------------------------------------
+
+/**
+ * Para las páginas que solo cambian datos (finalizar, vender, anular).
+ * Exige rol admin, método POST y el token CSRF del formulario (Issue #81).
+ * Así, una página de otro sitio no puede hacer que el navegador de alguien
+ * de la junta venda o anule algo sin que lo sepa.
+ */
+function exigirAccionAdmin(): void
+{
+    requiereRol('admin');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Método no permitido.');
+    }
+    if (!csrfValido()) {
+        rechazarCsrf();
+    }
+}
+
+/** Respuesta cuando el token CSRF falta o no coincide: no se cambia nada. */
+function rechazarCsrf(): never
+{
+    http_response_code(400);
+    encabezado('Formulario vencido');
+    ?>
+    <div class="adi-form-narrow">
+        <?php aviso('warn', 'El formulario venció o no vino de esta página, así que no se hizo ningún cambio. Volvé a la página, recargala e intentá de nuevo.'); ?>
+        <a href="<?= RAIZ ?>src/actividades/index.php" class="btn adi-btn-soft">Ir a Actividades</a>
+    </div>
+    <?php
+    pie();
+    exit;
+}
+
 // --- Vista ------------------------------------------------------------------
 
 /** 7 → "07". Así se leen los números en una rifa. */

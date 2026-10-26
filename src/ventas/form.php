@@ -55,6 +55,9 @@ $actividades = $baseDatos->selectCollection('actividades')
 $contactos = contactosActivos($baseDatos);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrfValido()) {
+        rechazarCsrf();   // no vino de este formulario: no se guarda nada
+    }
     [$items, $total, $errores, $filas] = leerItems($_POST);
     if (!$filas) {
         $filas = [['producto' => '', 'cantidad' => '1', 'precio' => '']];
@@ -134,6 +137,7 @@ $volver = idValido($actividadId) ? '../actividades/ver.php?id=' . $actividadId :
         </div>
     <?php else: ?>
     <form method="POST" class="adi-card adi-card-body" id="form-venta">
+        <?= campoCsrf() ?>
         <?php if ($editar): ?>
             <input type="hidden" name="id" value="<?= e($id) ?>">
         <?php endif; ?>
