@@ -3,7 +3,7 @@
 ## Orden de ejecución
 
 1. `crear_colecciones.js` crea las colecciones `espacios` y `reservas` con su validación JSON Schema y sus índices. No inserta datos y se puede correr las veces que haga falta.
-   `crear_colecciones_ventas.js` hace lo mismo para `actividades`, `ventas` y `rifas`: JSON Schema, índice único `{rifa_id, numero}` (un número de rifa no se vende dos veces) e índice `{actividad_id, fecha}`. También es idempotente y acepta los datos de los dos scripts de carga.
+   `crear_colecciones_ventas.js` hace lo mismo para `actividades`, `ventas` y `rifas`: JSON Schema, índice único `{rifa_id, numero}` (un número de rifa no se vende dos veces) e índices `{actividad_id, fecha}` y `{fecha: -1}` en ventas. También es idempotente y acepta los datos de los dos scripts de carga.
    `crear_colecciones_contactos.js` hace lo mismo para `contactos` y `seguimientos`: JSON Schema en nivel `moderate` (los documentos viejos con otra forma se pueden seguir editando) e índices para el historial y los recordatorios pendientes.
 2. `cargar_datos.js` (mongosh) o `cargar_datos.php` (PHP) llenan la base con datos sintéticos. Solo hace falta uno de los dos.
 
@@ -33,7 +33,7 @@ php scripts/cargar_datos.php --limpiar --indices
 | `--semilla=N` | Semilla de Faker (por defecto 2026); la misma semilla da los mismos datos |
 | `--lote=N` | Documentos por `insertMany` (por defecto 5000) |
 | `--limpiar` | Vacía las colecciones antes de cargar; conserva índices y JSON Schema |
-| `--indices` | Crea los índices del diagrama (único en reservas y rifas, TTL en `vence`, compuesto en ventas) |
+| `--indices` | Crea los índices del diagrama (único en reservas y rifas, TTL en `vence`, `{actividad_id, fecha}` y `{fecha: -1}` en ventas) |
 
 Sin `--limpiar`, el script se detiene si alguna colección ya tiene datos, para no duplicarlos.
 

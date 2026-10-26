@@ -11,6 +11,10 @@
  *   - Un número de rifa va del 0 al 99 y NO se puede vender dos veces en la
  *     misma rifa (índice único compuesto {rifa_id, numero}).
  *
+ * Índices de consulta: {actividad_id, fecha} para las ventas y el total de una
+ * actividad, y {fecha: -1} para el listado general de ventas, que se ordena
+ * por fecha y se filtra por rango de fechas sin elegir actividad.
+ *
  * Se ejecuta con el usuario personal de Atlas (readWrite + dbAdmin), igual
  * que scripts/crear_colecciones.js. El usuario "servidor" de la aplicación
  * no puede crear validadores ni índices.
@@ -27,7 +31,7 @@
  * números de JavaScript como double y PHP los guarda como int.
  *
  * Issues: #27 (actividades), #28 (ventas y rifas), #29 (índice único de rifas),
- *         #30 (índice de ventas por actividad y fecha).
+ *         #30 (índice de ventas por actividad y fecha), #82 (índice por fecha).
  */
 
 const adi = db.getSiblingDB("adi");
@@ -161,6 +165,9 @@ print("  único {rifa_id, numero}: un número de rifa no se puede vender dos vec
 
 adi.ventas.createIndex({ actividad_id: 1, fecha: 1 });
 print("  compuesto {actividad_id, fecha}: ventas de una actividad y su total recaudado");
+
+adi.ventas.createIndex({ fecha: -1 });
+print("  {fecha: -1}: listado general de ventas, más recientes primero y por rango de fechas");
 
 verificar();
 
