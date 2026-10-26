@@ -89,6 +89,14 @@ Prueba P4 de `docs/pruebas.md` (Issue #15): dos procesos PHP en paralelo intenta
 powershell -ExecutionPolicy Bypass -File .\scripts\prueba_concurrencia.ps1 -Rondas 5
 ```
 
+## prueba_rifa_concurrencia.ps1 y prueba_rifa_concurrencia.php
+
+Prueba P7 de `docs/pruebas.md` (Issue #35): dos procesos PHP en paralelo intentan vender el mismo número de la misma rifa en el mismo instante. En cada ronda uno lo vende y el otro recibe el error 11000 del índice único `{rifa_id, numero}`. Usa su propia rifa de prueba (31/12/2099) y la borra al terminar, con sus números.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\prueba_rifa_concurrencia.ps1 -Rondas 5
+```
+
 ## prueba_ttl.js
 
 Prueba P5 de `docs/pruebas.md` (Issue #16): crea un apartado que vence en 60 s, mide cuánto tarda el índice TTL en borrarlo y comprueba que el horario se puede volver a reservar. Usa la fecha 30/12/2099 y la limpia al terminar.

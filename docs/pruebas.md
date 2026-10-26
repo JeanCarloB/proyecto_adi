@@ -10,6 +10,9 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P4 | Alquileres: dos reservas simultáneas del mismo horario | OK | 2026-10-22 | Hazel |
 | P5 | Alquileres: un apartado vence solo (TTL) y libera el horario | OK | 2026-10-22 | Hazel |
 | P6 | Alquileres: acceso según el rol (sin sesión, comunidad, admin) | OK (11 de 11) | | Hazel |
+| P7 | Ventas: dos ventas simultáneas del mismo número de rifa | OK | 2026-10-25 | Kendall |
+| P8 | Ventas: datos inválidos, número repetido y actividad finalizada | OK (12 de 12, local) | 2026-10-24 | Kendall |
+| P9 | Ventas: acceso según el rol y token CSRF (sin sesión, comunidad, admin) | OK (12 de 12, local) | 2026-10-24 | Kendall |
 
 ---
 
@@ -152,3 +155,81 @@ Comprueba que los permisos se aplican en el servidor y no solo escondiendo boton
 | 11 | Admin | Rechazar con motivo | En "Mis solicitudes" sale Rechazada con el motivo | OK · [captura](capturas/s3-alquileres-rechazada.png) |
 
 **Resultado obtenido:** 11 de 11 filas comprobadas, todas OK. Las filas 3 y 9 usan capturas de otras filas: abrir reservas sin sesión lleva al mismo login de la fila 2, y la solicitud aprobada aparece en "Mis solicitudes" de la fila 5. En la fila 8, el `fetch` termina con `redirected: true` en `src/publico/calendario.php`: la petición de comunidad nunca llega a la lógica de aprobar. En la fila 10, después de apartar de todas formas, la solicitud del 31 oct queda marcada "Horario ya ocupado" y solo se puede rechazar.
+
+---
+
+## P7 · Dos ventas simultáneas del mismo número de rifa (Issue #35)
+
+Comprueba que el número repetido lo impide la **base de datos**, aunque dos voluntarios vendan el mismo número en el mismo instante. Es la misma idea de P4 en alquileres: revisar primero si el número está libre y después insertar deja una ventana en la que el otro se cuela. Por eso `src/rifas/vender.php` no revisa: inserta directo y el índice único `{rifa_id, numero}` decide.
+
+**Preparación:** PHP con la extensión `mongodb` y el `.env` configurado. El script crea su propia rifa ("Rifa de prueba de concurrencia", 31/12/2099) y la borra al terminar, con sus números. No toca las rifas reales.
+
+**Pasos (PowerShell, desde la raíz del proyecto):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\prueba_rifa_concurrencia.ps1 -Rondas 5
+```
+
+El script lanza **dos procesos PHP en paralelo** (`Start-Job`). Cada uno abre su conexión, espera hasta el mismo instante acordado e intenta vender el número 99.
+
+**Esperado:** en cada ronda un proceso queda **VENDIDO** y el otro **RECHAZADO (11000, clave duplicada)**. Al final: 5 vendidos y 5 rechazados.
+
+**Variante en la interfaz:** abrir la misma rifa en dos navegadores con sesión de administración, elegir el mismo número y tocar "Vender número" casi a la vez. Uno lo vende y el otro muestra "El número ya se vendió…" ([captura](capturas/s3-ventas-rifa-repetido.png)).
+
+**Resultado obtenido (2026-10-25, desde el servidor del curso contra Atlas M0 Oregon, 5 rondas):** ✅
+
+Se corrió en el servidor con un bucle de `bash` equivalente al `.ps1`: cada ronda prepara la rifa, lanza los dos procesos con `&` y espera a ambos.
+
+| Ronda | Proceso A | Proceso B | Salida respecto al instante acordado (A / B) | Tiempo del insert (A / B) |
+| --- | --- | --- | --- | --- |
+| 1 | Rechazado (11000) | Vendido | +0 ms / +1 ms | 7 / 7 ms |
+| 2 | Rechazado (11000) | Vendido | +1 ms / +0 ms | 6 / 7 ms |
+| 3 | Rechazado (11000) | Vendido | +1 ms / +1 ms | 7 / 6 ms |
+| 4 | Vendido | Rechazado (11000) | +0 ms / +0 ms | 7 / 7 ms |
+| 5 | Rechazado (11000) | Vendido | +1 ms / +1 ms | 6 / 6 ms |
+
+Al final: *"Limpieza: rifa de prueba y 1 número(s) eliminados"*.
+
+**Lectura:** los dos procesos salieron con a lo sumo 1 ms de diferencia, es decir, prácticamente al mismo tiempo, y en cada ronda **exactamente uno** vendió el número 99: 5 vendidos y 5 rechazados. El ganador cambia (B en las rondas 1, 2, 3 y 5; A en la 4), así que es una carrera real y no un orden fijo. Nunca quedó el mismo número vendido dos veces: lo garantiza el índice único `{rifa_id, numero}`, no el código PHP. Al terminar, la limpieza dejó solo un número, así que la rifa de prueba nunca tuvo un duplicado.
+
+## P8 · Datos inválidos, número repetido y actividad finalizada
+
+Comprueba que el módulo de ventas rechaza lo que no debe guardarse. Las reglas se validan en PHP para dar un mensaje claro, y la base las vuelve a exigir con el JSON Schema y los índices únicos (ver P3).
+
+| # | Caso | Esperado | Resultado |
+| --- | --- | --- | --- |
+| 1 | Venta con cantidad 0 y precio negativo | "La cantidad de la fila 1…" y "El precio de la fila 1…"; no se guarda | OK · [captura](capturas/s3-ventas-datos-invalidos.png) |
+| 2 | Venta sin productos (todas las filas vacías) | "Agregá al menos un producto." | OK |
+| 3 | Producto sin nombre en una fila | "Falta el nombre del producto en la fila N." | OK |
+| 4 | Venta con un contacto que no existe | "El contacto elegido no existe." | OK |
+| 5 | Venta de productos en una rifa | "Seleccioná el turno o la feria de la venta." | OK |
+| 6 | Vender el número 100 o un número negativo | No se vende (`error=datos`) | OK |
+| 7 | Vender un número ya vendido | "El número ya se vendió. La base de datos no permite venderlo dos veces" (11000) | OK · [captura](capturas/s3-ventas-rifa-repetido.png) |
+| 8 | Vender en una rifa sin precio por número | "Esta rifa no tiene precio por número…" | OK |
+| 9 | Registrar una venta en una actividad finalizada | "Esa actividad está finalizada y ya no acepta ventas." | OK |
+| 10 | Editar o anular ventas de una actividad finalizada | No aparecen los botones; el listado dice "Cerrada" | OK · [captura](capturas/s3-ventas-finalizada.png) |
+| 11 | Vender un número en una rifa finalizada | No se vende (`error=cerrada`) | OK |
+| 12 | Finalizar con un estado inventado (`estado=cancelada`) | 400, la actividad no cambia | OK |
+
+**Resultado obtenido:** 12 de 12 OK, en local con el driver real de PHP y datos sintéticos (2026-10-24). Falta repetir los casos 1, 7 y 9 en el servidor para las capturas finales.
+
+## P9 · Acceso al módulo de ventas según el rol
+
+Comprueba que los permisos se aplican en el servidor y que la comunidad no ve datos personales. Antes del PR #87, una cuenta de comunidad que abría Actividades terminaba en el calendario de alquileres, porque heredaba el control de acceso de `alquileres.php`.
+
+| # | Usuario | Acción | Esperado | Resultado |
+| --- | --- | --- | --- | --- |
+| 1 | Sin sesión | Abrir cualquier página de `src/actividades`, `src/ventas` o `src/rifas` | Lo manda al login | OK |
+| 2 | Comunidad | Abrir Actividades | Lista con estado y total, solo el botón "Ver"; sin "Nueva actividad" ni "Editar" | OK · [captura](capturas/s3-ventas-comunidad-actividades.png) |
+| 3 | Comunidad | Abrir una rifa | Cuadrícula de libres y vendidos y cómo comprar; sin formulario de venta ni nombres de compradores | OK · [captura](capturas/s3-ventas-comunidad-rifa.png) |
+| 4 | Comunidad | Abrir un turno | Totales y productos más vendidos; sin el detalle de las ventas ni quién compró | OK · [captura](capturas/s3-ventas-comunidad-turno.png) |
+| 5 | Comunidad | Abrir `src/ventas/index.php` | Lo redirige a Actividades; el enlace "Ventas" no aparece en la barra | OK |
+| 6 | Comunidad | Abrir `src/ventas/form.php` o `src/actividades/form.php` | 403 "no tiene permiso" | OK · [captura](capturas/s3-ventas-comunidad-403.png) |
+| 7 | Comunidad | POST directo a vender, anular o finalizar, aun con su propio token | 403 y no cambia nada | OK |
+| 8 | Admin | POST sin token CSRF o con un token falso | 400 "El formulario venció…" y no cambia nada | OK · [captura](capturas/s3-ventas-csrf.png) |
+| 9 | Admin | POST con el token de otra sesión | 400 y no cambia nada | OK |
+| 10 | Admin | Vender, registrar venta, finalizar, reabrir y anular desde los formularios | Funcionan | OK |
+| 11 | Admin | Listado de ventas | Nombre de la actividad y del comprador con `$lookup` | OK · [captura](capturas/s3-ventas-listado-lookup.png) |
+| 12 | Comunidad | Revisar el código HTML de la rifa | No aparece ningún nombre de comprador, ni en los `title` de la cuadrícula | OK |
+
+**Resultado obtenido:** 12 de 12 OK, en local con el driver real de PHP y sesiones de los dos roles (2026-10-24). Las filas 3 y 12 dependen de la consulta cubierta de la rifa: para la comunidad la página solo pide `{_id: 0, numero: 1}`, así que el comprador nunca llega a PHP.
