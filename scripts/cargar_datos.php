@@ -320,5 +320,6 @@ function crearIndices(MongoDB\Database $db): void
     $db->reservas->createIndex(['vence' => 1], ['expireAfterSeconds' => 0]);
     $db->rifas->createIndex(['rifa_id' => 1, 'numero' => 1], ['unique' => true]);
     $db->ventas->createIndex(['actividad_id' => 1, 'fecha' => 1]);
+    $db->ventas->createIndex(['fecha' => -1]);   // listado general de ventas (Issue #82)
     echo "  índices del diagrama creados (o ya existían)\n";
 }

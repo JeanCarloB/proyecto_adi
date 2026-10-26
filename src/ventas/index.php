@@ -2,9 +2,13 @@
 /**
  * Listado de ventas con filtros por actividad y por fecha (Issue #32).
  *
- * Filtrar por actividad y rango de fechas aprovecha el índice compuesto
- * {actividad_id, fecha}. El resumen (cantidad y total) se calcula con
- * aggregation pipeline sobre todo el filtro, no solo sobre las filas visibles.
+ * Las filas salen de un aggregation pipeline con $lookup a actividades y
+ * contactos (Issue #82): una sola consulta trae la venta con el nombre de su
+ * actividad y de quien compró. El $match + $sort + $limit del inicio usan un
+ * índice: {actividad_id, fecha} si se filtra por actividad, o {fecha: -1}
+ * si se filtra solo por fechas o no hay filtro. El resumen (cantidad y total)
+ * se calcula con otro pipeline sobre todo el filtro, no solo sobre las filas
+ * visibles.
  *
  * Solo administración (Issue #80): cada venta puede llevar el nombre de quien
  * compró. La comunidad ve los totales de cada actividad en actividades/.
@@ -44,7 +48,21 @@ if ($rango) {
 
 $coleccion = $baseDatos->selectCollection('ventas');
 
-$ventas = $coleccion->find($filtro, ['sort' => ['fecha' => -1], 'limit' => LIMITE])->toArray();
+// $match, $sort y $limit van primero: MongoDB los resuelve con el índice y el
+// $lookup solo trabaja sobre las 200 ventas que se muestran, no sobre todas.
+$ventas = $coleccion->aggregate([
+    ['$match' => (object) $filtro],
+    ['$sort'  => ['fecha' => -1]],
+    ['$limit' => LIMITE],
+    ['$lookup' => ['from' => 'actividades', 'localField' => 'actividad_id', 'foreignField' => '_id', 'as' => 'actividad']],
+    ['$unwind' => ['path' => '$actividad', 'preserveNullAndEmptyArrays' => true]],
+    ['$lookup' => ['from' => 'contactos', 'localField' => 'contacto_id', 'foreignField' => '_id', 'as' => 'contacto']],
+    ['$unwind' => ['path' => '$contacto', 'preserveNullAndEmptyArrays' => true]],
+    ['$project' => [
+        'fecha' => 1, 'items' => 1, 'total' => 1, 'actividad_id' => 1,
+        'actividad.nombre' => 1, 'actividad.estado' => 1, 'contacto.nombre' => 1,
+    ]],
+])->toArray();
 
 $resumen = ['n' => 0, 'total' => 0.0];
 foreach ($coleccion->aggregate([
@@ -54,7 +72,7 @@ foreach ($coleccion->aggregate([
     $resumen = ['n' => (int) $g['n'], 'total' => (float) (string) $g['total']];
 }
 
-// Actividades con ventas (turnos y ferias), para el filtro y para mostrar nombres
+// Turnos y ferias para el filtro de actividad
 $actividades = [];
 foreach ($baseDatos->selectCollection('actividades')->find(
     ['tipo' => ['$in' => ['turno', 'feria']]],
@@ -62,8 +80,6 @@ foreach ($baseDatos->selectCollection('actividades')->find(
 ) as $a) {
     $actividades[(string) $a['_id']] = $a;
 }
-
-$contactos = nombresContactos($baseDatos, $ventas);
 
 encabezado('Ventas', 'ventas');
 
@@ -150,8 +166,8 @@ if (($_GET['error'] ?? '') === 'cerrada') {
                 </thead>
                 <tbody>
                 <?php foreach ($ventas as $v):
-                    $act     = $actividades[(string) $v['actividad_id']] ?? null;
-                    $abierta = $act !== null && $act['estado'] === 'programada';
+                    $act     = $v['actividad'] ?? null;   // del $lookup
+                    $abierta = $act !== null && ($act['estado'] ?? '') === 'programada';
                 ?>
                     <tr>
                         <td class="text-nowrap"><?= mostrarHora($v['fecha']) ?>
@@ -165,8 +181,8 @@ if (($_GET['error'] ?? '') === 'cerrada') {
                             <?php endif; ?>
                         </td>
                         <td><?= e(resumenItems($v['items'])) ?></td>
-                        <td><?= isset($v['contacto_id'])
-                            ? e($contactos[(string) $v['contacto_id']] ?? '—')
+                        <td><?= isset($v['contacto']['nombre'])
+                            ? e($v['contacto']['nombre'])
                             : '<span class="adi-sub">—</span>' ?></td>
                         <td class="adi-num"><?= dinero($v['total']) ?></td>
                         <td class="text-end text-nowrap">
