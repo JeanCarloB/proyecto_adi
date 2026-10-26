@@ -164,6 +164,7 @@ if (($_GET['ok'] ?? '') === 'error') {
                                class="btn btn-sm adi-btn-ghost">Editar</a>
                             <form action="eliminar.php" method="POST" class="d-inline"
                                   onsubmit="return confirm('¿Deseás eliminar este seguimiento?');">
+                                <?= campoCsrf() ?>
                                 <input type="hidden" name="id"
                                        value="<?= e((string) $seguimiento['_id']) ?>">
                                 <button type="submit" class="btn btn-sm adi-btn-quiet-danger">

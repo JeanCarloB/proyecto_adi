@@ -216,12 +216,14 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                             <?php if ($apartado): ?>
                                 <form action="confirmar.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Confirmar el pago de esta reserva?');">
+                                    <?= campoCsrf() ?>
                                     <input type="hidden" name="id" value="<?= e($r['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-soft">Confirmar pago</button>
                                 </form>
                             <?php endif; ?>
                             <form action="cancelar.php" method="POST" class="d-inline"
                                   onsubmit="return confirm('¿Cancelar esta reserva? El horario quedará libre.');">
+                                <?= campoCsrf() ?>
                                 <input type="hidden" name="id" value="<?= e($r['_id']) ?>">
                                 <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Cancelar</button>
                             </form>

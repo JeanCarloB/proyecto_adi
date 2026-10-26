@@ -13,6 +13,7 @@
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 use MongoDB\BSON\UTCDateTime;
 
@@ -150,6 +151,7 @@ encabezado('Nueva reserva', 'reservas');
         </div>
     <?php else: ?>
     <form method="POST" id="form-reserva" class="adi-card adi-card-body">
+        <?= campoCsrf() ?>
         <?php if ($volver): ?>
             <input type="hidden" name="volver" value="calendario">
             <input type="hidden" name="mes" value="<?= e($mesCal) ?>">

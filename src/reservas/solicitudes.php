@@ -132,6 +132,7 @@ if (isset($errores[$_GET['error'] ?? ''])) {
                                 <?php if ($libre): ?>
                                     <form action="resolver_solicitud.php" method="POST" class="d-inline"
                                           onsubmit="return confirm('¿Aprobar? Se aparta el espacio por <?= HORAS_APARTADO ?> horas a nombre de esta persona.');">
+                                        <?= campoCsrf() ?>
                                         <input type="hidden" name="id" value="<?= e($s['_id']) ?>">
                                         <input type="hidden" name="accion" value="aprobar">
                                         <button type="submit" class="btn btn-sm adi-btn-primary">Aprobar</button>
@@ -152,6 +153,7 @@ if (isset($errores[$_GET['error'] ?? ''])) {
 <!-- Cuadro para rechazar con motivo (reemplaza al prompt() del navegador) -->
 <dialog id="rechazo" class="adi-dialog" aria-labelledby="rechazo-titulo">
     <form action="resolver_solicitud.php" method="POST">
+        <?= campoCsrf() ?>
         <input type="hidden" name="id" value="">
         <input type="hidden" name="accion" value="rechazar">
 

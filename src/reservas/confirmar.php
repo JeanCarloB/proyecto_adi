@@ -11,6 +11,7 @@
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

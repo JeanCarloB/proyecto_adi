@@ -12,6 +12,7 @@
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 $coleccion = $baseDatos->selectCollection('reservas');
 
@@ -126,6 +127,7 @@ encabezado('Editar reserva', 'reservas');
     <?php listaErrores($errores); ?>
 
     <form method="POST" class="adi-card adi-card-body">
+        <?= campoCsrf() ?>
         <input type="hidden" name="id" value="<?= e($idReserva) ?>">
         <?php if ($volver): ?>
             <input type="hidden" name="volver" value="calendario">

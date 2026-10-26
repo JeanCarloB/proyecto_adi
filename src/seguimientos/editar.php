@@ -2,6 +2,7 @@
 <?php
 require_once dirname(__DIR__) . '/includes/seguimientos.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 $coleccionSeguimientos = $baseDatos->selectCollection('seguimientos');
 $coleccionContactos = $baseDatos->selectCollection('contactos');
@@ -150,6 +151,7 @@ if ($errores) {
 
 <div class="adi-form-narrow">
     <form method="POST" class="adi-card adi-card-body">
+        <?= campoCsrf() ?>
         <div class="mb-3">
             <label for="contacto_id" class="form-label">Contacto *</label>
             <select class="form-select" id="contacto_id" name="contacto_id" required>

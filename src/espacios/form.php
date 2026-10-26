@@ -5,6 +5,7 @@
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 $coleccion = $baseDatos->selectCollection('espacios');
 
@@ -92,6 +93,7 @@ encabezado($editar ? 'Editar espacio' : 'Nuevo espacio', 'espacios');
     <?php listaErrores($errores); ?>
 
     <form method="POST" class="adi-card adi-card-body">
+        <?= campoCsrf() ?>
         <?php if ($editar): ?>
             <input type="hidden" name="id" value="<?= e($id) ?>">
         <?php endif; ?>

@@ -37,8 +37,8 @@ Comprueba que la aplicación falla de forma controlada, sin mostrar la URI ni la
 **Variante A · URI incorrecta** (en una copia local, nunca en el `.env` del servidor):
 
 1. En `.env`, cambiar la contraseña de `MONGODB_URI` por una incorrecta.
-2. Abrir `diagnostico.php`.
-3. **Esperado:** "Conexión a MongoDB Atlas" y "Escritura en la base" en **Falla**, con un mensaje de autenticación; la página no se cae. La portada (`index.php`) muestra "No se pudo conectar con la base de datos" sin detalles de la URI.
+2. Abrir `diagnostico.php` (con la sesión de admin abierta antes de cambiar el `.env`).
+3. **Esperado:** "Conexión a MongoDB Atlas" y "Escritura en la base" en **Falla**, con un mensaje de autenticación; la página no se cae. Sin sesión, "Escritura" sale en **Solo admin** y el aviso dice "No se pudo conectar con la base de datos", sin el texto del error. La portada (`index.php`) muestra "No se pudo conectar con la base de datos" sin detalles de la URI.
 4. Abrir un módulo (por ejemplo `src/contactos/`). **Esperado:** mensaje de error, no una pantalla en blanco ni la URI.
 5. Restaurar el `.env`.
 

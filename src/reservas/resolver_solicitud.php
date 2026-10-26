@@ -12,6 +12,7 @@
  */
 require_once dirname(__DIR__) . '/includes/alquileres.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Driver\Session;

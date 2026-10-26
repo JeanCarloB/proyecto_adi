@@ -2,6 +2,7 @@
 <?php
 require_once dirname(__DIR__) . '/includes/seguimientos.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');

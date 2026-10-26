@@ -145,6 +145,7 @@ if (($_GET['desactivado'] ?? '') === '1') {
                             <?php if ($activo): ?>
                                 <form action="desactivar.php" method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Deseás desactivar este contacto?');">
+                                    <?= campoCsrf() ?>
                                     <input type="hidden" name="id" value="<?= e((string) $contacto['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Desactivar</button>
                                 </form>

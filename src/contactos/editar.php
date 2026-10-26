@@ -4,6 +4,7 @@
  */
 require_once dirname(__DIR__) . '/includes/contactos.php';
 requiereRol('admin');
+exigirCsrf();   // el POST debe traer el token de su formulario
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
