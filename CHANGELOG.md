@@ -5,9 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ## [Sin publicar]
 
+## [0.3.0] - Seguimiento 3
+
 ### Agregado
 - **Seguridad:** inicio y cierre de sesión (`login.php`, `logout.php`) contra la colección `usuarios` con `password_verify`, y permisos por rol en `src/includes/sesion.php`: todas las páginas exigen sesión y el backend solo deja al rol `admin` crear, editar, anular o borrar (responde 403 a `comunidad`). Ocultar los botones en cada módulo queda a cargo de sus responsables.
-- **Seguridad:** token CSRF (`exigirCsrf()` en `src/includes/sesion.php`) en todos los formularios de administración de contactos, seguimientos, espacios y reservas: un POST sin el token de su formulario responde 400 y no cambia nada. Ventas ya lo valida con `exigirAccionAdmin()` (PR #88).
+- **Seguridad:** token CSRF (`exigirCsrf()` en `src/includes/sesion.php`) en todos los formularios de administración de contactos, seguimientos, espacios y reservas: un POST sin el token de su formulario responde 400 y no cambia nada. Ventas ya lo valida con `exigirAccionAdmin()` (PR #88). (PR #95; Issue #98)
+- **Alquileres:** calendario público y solicitudes de reserva de la comunidad con captcha ALTCHA de un solo uso; la junta las aprueba en una transacción (PR #73).
+- **Alquileres:** pruebas P4 (concurrencia) y P5 (TTL) con resultados en Atlas, prueba P6 de acceso por rol, mediciones con `explain()` en `scripts/medir_alquileres.js` y decisiones técnicas del módulo (PR #74, #75, #76, #77, #78; Issues #15, #16, #17, #18).
+- **Contactos:** historial de seguimientos de cada contacto con `$lookup` y acceso solo para administración (PR #79).
+- **Contactos:** JSON Schema de `contactos` y `seguimientos` en `scripts/crear_colecciones_contactos.js` (PR #71).
+- Decisiones generales y de inicio de sesión y permisos en `docs/decisiones.md` (Issue #100).
+- Bitácora `docs/seguimientos/S3.md` (Issue #54).
 - `scripts/crear_usuarios_prueba.php`: usuarios ficticios `admin@example.com` y `comunidad@example.com` para probar el login.
 - **Ventas:** vistas de administración y comunidad. La comunidad ve actividades, totales y números libres, sin acciones ni nombres de compradores (PR #87; Issue #80).
 - **Ventas:** token CSRF en todas las acciones de administración y validación estricta del estado de la actividad (PR #88; Issue #81).
@@ -21,7 +29,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - **Carga de datos:** las rifas generadas por `cargar_datos.js` y `cargar_datos.php` traen `precio_numero` y se pueden vender sin editarlas (PR #93; Issue #84).
 
 ### Cambiado
-- `diagnostico.php` ya no escribe en la base con visitas anónimas: la prueba de escritura, las colecciones, las últimas conexiones y el texto del error solo se muestran con sesión de admin.
+- Si MongoDB no responde, los módulos muestran "No se pudo conectar con la base de datos" con código 503 en lugar de una pantalla en blanco, sin la URI ni el host; el detalle va al log del servidor (`src/includes/conexion.php`; prueba P2, Issue #50).
+- README al día: rol de comunidad, variable `ALTCHA_HMAC_KEY`, cuentas de prueba, tabla de documentación, capturas y estado de los seguimientos (Issue #56).
+- `diagnostico.php` ya no escribe en la base con visitas anónimas: la prueba de escritura, las colecciones, las últimas conexiones y el texto del error solo se muestran con sesión de admin (PR #95).
 
 ## [0.2.0] - Seguimiento 2
 
