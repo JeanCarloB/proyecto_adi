@@ -9,7 +9,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ### Agregado
 - **Seguridad:** inicio y cierre de sesión (`login.php`, `logout.php`) contra la colección `usuarios` con `password_verify`, y permisos por rol en `src/includes/sesion.php`: todas las páginas exigen sesión y el backend solo deja al rol `admin` crear, editar, anular o borrar (responde 403 a `comunidad`). Ocultar los botones en cada módulo queda a cargo de sus responsables.
-- **Seguridad:** token CSRF (`exigirCsrf()` en `src/includes/sesion.php`) en todos los formularios de administración de contactos, seguimientos, espacios y reservas: un POST sin el token de su formulario responde 400 y no cambia nada. Ventas ya lo valida con `exigirAccionAdmin()` (PR #88). (PR #95; Issue #98)
+- **Seguridad:** token CSRF (`exigirCsrf()` en `src/includes/sesion.php`) en todos los formularios de administración de contactos, seguimientos, espacios y reservas: un POST sin el token de su formulario responde 400 y no cambia nada. Ventas ya lo valida con `exigirAccionAdmin()` desde el PR #88 (PR #95; Issue #98).
 - **Alquileres:** calendario público y solicitudes de reserva de la comunidad con captcha ALTCHA de un solo uso; la junta las aprueba en una transacción (PR #73).
 - **Alquileres:** pruebas P4 (concurrencia) y P5 (TTL) con resultados en Atlas, prueba P6 de acceso por rol, mediciones con `explain()` en `scripts/medir_alquileres.js` y decisiones técnicas del módulo (PR #74, #75, #76, #77, #78; Issues #15, #16, #17, #18).
 - **Contactos:** historial de seguimientos de cada contacto con `$lookup` y acceso solo para administración (PR #79).
