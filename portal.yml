@@ -1,0 +1,15 @@
+nombre: ADIministra
+resumen: Alquiler de espacios, ventas en actividades y contactos para una Asociación de Desarrollo Integral, con MongoDB Atlas
+problema: Las ADI llevan alquileres, ventas y rifas en cuadernos, WhatsApp y Excel, y eso causa dobles alquileres, ventas que no cuadran e historial que se pierde
+usuarios: Junta directiva, voluntarios y vecinos de una ADI
+motores: [MongoDB]
+lenguaje: PHP
+licencia: MIT
+repositorio: https://github.com/JeanCarloB/proyecto_adi
+demo_video: # PENDIENTE: enlace del video de demostración (Issue #102)
+demo_url: https://grupo4.crnube.net/clientes2/proyecto/
+captura: docs/capturas/s3-alquileres-publico.png
+grupo: 4
+dia: martes
+periodo: II-2026
+autores_publicos: [Hazel Molina, Kendall Ortega, María APELLIDO, Jean Carlo Bermúdez] # CONFIRMAR nombres completos

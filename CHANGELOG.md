@@ -5,6 +5,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 
 ## [Sin publicar]
 
+### Agregado
+- `portal.yml`: ficha del proyecto para el portal del curso (Issue #103).
+
 ## [0.3.0] - Seguimiento 3
 
 ### Agregado
