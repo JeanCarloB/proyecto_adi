@@ -11,6 +11,8 @@
  * Vista por rol (Issue #80): administración ve todo y tiene las acciones.
  * La comunidad ve los totales, los productos más vendidos y qué números de
  * la rifa quedan libres, pero no quién compró ni el detalle de cada venta.
+ * Desde el Issue #114 la comunidad también aparta números de la rifa, y la
+ * junta confirma el pago o los libera (la sección de la rifa está en _rifa.php).
  */
 require_once dirname(__DIR__) . '/includes/ventas.php';
 
@@ -32,22 +34,29 @@ $admin   = esAdmin();
 $resumen = totalesPorActividad($baseDatos, [$id])[(string) $id] ?? ['n' => 0, 'total' => 0.0];
 
 if ($esRifa) {
+    $coleccionRifas = $baseDatos->selectCollection('rifas');
+    $mios = [];   // números de la persona con sesión (comunidad): numero → documento
     if ($admin) {
-        // Números vendidos con su comprador: como mucho 100 documentos, se traen todos.
-        $numeros = $baseDatos->selectCollection('rifas')
-            ->find(['rifa_id' => $id], ['sort' => ['numero' => 1]])
-            ->toArray();
+        // Números vendidos y apartados con su comprador: como mucho 100 documentos, se traen todos.
+        $numeros = $coleccionRifas->find(['rifa_id' => $id], ['sort' => ['numero' => 1]])->toArray();
         $contactos  = nombresContactos($baseDatos, $numeros);
         $paraVender = $abierta ? contactosActivos($baseDatos) : [];
     } else {
-        // Comunidad: solo qué números están vendidos. Con la proyección {_id: 0, numero: 1}
+        // Comunidad: solo qué números están ocupados. Con la proyección {_id: 0, numero: 1}
         // es una consulta CUBIERTA por el índice único {rifa_id, numero}: MongoDB responde
         // desde el índice sin abrir los documentos, así que no lee quién compró cada número.
-        $numeros = $baseDatos->selectCollection('rifas')
+        $numeros = $coleccionRifas
             ->find(['rifa_id' => $id], ['projection' => ['_id' => 0, 'numero' => 1], 'sort' => ['numero' => 1]])
             ->toArray();
         $contactos  = [];
         $paraVender = [];
+        // Los suyos sí con detalle (apartado o pagado y hasta cuándo), filtrados por su usuario_id
+        foreach ($coleccionRifas->find(
+            ['rifa_id' => $id, 'usuario_id' => miUsuarioId()],
+            ['projection' => ['numero' => 1, 'estado' => 1, 'vence' => 1]]
+        ) as $m) {
+            $mios[(int) $m['numero']] = $m;
+        }
     }
     $vendidos = [];
     foreach ($numeros as $n) {
@@ -55,6 +64,10 @@ if ($esRifa) {
     }
     $libres = array_values(array_diff(range(0, NUMEROS_RIFA - 1), array_keys($vendidos)));
     $precio = $actividad['precio_numero'] ?? null;
+    $apartados = $admin
+        ? count(array_filter($numeros, fn ($n) => ($n['estado'] ?? '') === 'apartado'))
+        : count($vendidos) - $resumen['n'];   // ocupados que todavía no se pagaron
+    $misApartados = count(array_filter($mios, fn ($m) => ($m['estado'] ?? '') === 'apartado'));
 } else {
     // Productos más vendidos: se "desenrolla" el arreglo de ítems y se agrupa por producto.
     $productos = $baseDatos->selectCollection('ventas')->aggregate([
@@ -128,12 +141,19 @@ avisoExito([
     'venta-anulada'  => 'La venta se anuló y ya no suma al total.',
     'numero'         => 'Número ' . numeroRifa(texto($_GET['numero'] ?? '0')) . ' vendido.',
     'numero-anulado' => 'El número quedó libre otra vez.',
+    'apartado'       => 'Apartaste el número ' . numeroRifa(texto($_GET['numero'] ?? '0'))
+        . '. Pagáselo a la junta en las próximas ' . HORAS_APARTADO_RIFA . ' horas; si no, se libera solo.',
+    'pagado'         => 'Pago confirmado: el número ' . numeroRifa(texto($_GET['numero'] ?? '0')) . ' quedó vendido.',
 ]);
 
 $error = texto($_GET['error'] ?? '');
 $mensajesError = [
     'repetido' => 'El número ' . numeroRifa(texto($_GET['numero'] ?? '0'))
-        . ' ya se vendió. La base de datos no permite venderlo dos veces: elegí otro.',
+        . ' ya está vendido o apartado. La base de datos no permite tenerlo dos veces: elegí otro.',
+    'ocupado'  => 'El número ' . numeroRifa(texto($_GET['numero'] ?? '0'))
+        . ' ya no está disponible: alguien lo apartó o lo compró hace un momento. Elegí otro.',
+    'limite'   => 'Ya tenés ' . MAX_APARTADOS_RIFA . ' números apartados sin pagar en esta rifa. Pagalos o liberá alguno en Mis compras.',
+    'vencido'  => 'Ese apartado ya no existe: venció o alguien lo liberó.',
     'cerrada'  => 'La actividad está finalizada: no acepta ventas ni cambios. Reabrila si necesitás corregir algo.',
     'datos'    => 'Revisá el número y el contacto: alguno no es válido.',
     'precio'   => 'Esta rifa no tiene precio por número. Editá la actividad para indicarlo.',
@@ -141,7 +161,7 @@ $mensajesError = [
     'general'  => 'No se pudo completar la operación. Intentá de nuevo.',
 ];
 if (isset($mensajesError[$error])) {
-    aviso($error === 'repetido' || $error === 'cerrada' ? 'warn' : 'danger', $mensajesError[$error]);
+    aviso(in_array($error, ['repetido', 'ocupado', 'cerrada', 'limite', 'vencido'], true) ? 'warn' : 'danger', $mensajesError[$error]);
 }
 ?>
 
@@ -157,7 +177,9 @@ if (isset($mensajesError[$error])) {
         </div>
         <div class="adi-stat">
             <div class="adi-stat-label">Disponibles</div>
-            <div class="adi-stat-value"><?= count($libres) ?></div>
+            <div class="adi-stat-value"><?= count($libres) ?>
+                <?php if ($apartados > 0): ?><span class="adi-sub">· <?= $apartados ?> apartados</span><?php endif; ?>
+            </div>
         </div>
         <div class="adi-stat">
             <div class="adi-stat-label">Precio por número</div>
@@ -180,162 +202,7 @@ if (isset($mensajesError[$error])) {
 </section>
 
 <?php if ($esRifa): ?>
-    <?php // ------------------------------------------------------------- Rifa ?>
-    <div class="adi-rifa-layout">
-        <div class="adi-card adi-card-body">
-            <h2 class="adi-section-title">Números</h2>
-            <div class="adi-rifa" role="list">
-                <?php for ($n = 0; $n < NUMEROS_RIFA; $n++):
-                    $venta = $vendidos[$n] ?? null;
-                    $quien = $venta && $admin ? ($contactos[(string) $venta['contacto_id']] ?? 'Contacto') : '';
-                ?>
-                    <?php if ($venta): ?>
-                        <span class="adi-rifa-num is-sold" role="listitem"
-                              title="<?= $quien !== '' ? 'Vendido a ' . e($quien) : 'Vendido' ?>">
-                            <?= numeroRifa($n) ?>
-                        </span>
-                    <?php elseif ($admin && $abierta && $precio !== null): ?>
-                        <button type="button" class="adi-rifa-num" role="listitem" data-numero="<?= $n ?>"
-                                title="Disponible: elegir el <?= numeroRifa($n) ?>">
-                            <?= numeroRifa($n) ?>
-                        </button>
-                    <?php else: ?>
-                        <span class="adi-rifa-num" role="listitem"><?= numeroRifa($n) ?></span>
-                    <?php endif; ?>
-                <?php endfor; ?>
-            </div>
-            <div class="adi-rifa-legend">
-                <span><span class="adi-rifa-swatch"></span>Disponible</span>
-                <span><span class="adi-rifa-swatch is-sold"></span>Vendido</span>
-            </div>
-        </div>
-
-        <div>
-            <?php if (!$admin): ?>
-                <?php // Comunidad: información para comprar, sin formulario de venta ?>
-                <div class="adi-card adi-card-body">
-                    <h2 class="adi-section-title">¿Cómo comprar un número?</h2>
-                    <?php if (!$abierta): ?>
-                        <p class="mb-0">La rifa ya terminó: no se venden más números.</p>
-                    <?php elseif (!$libres): ?>
-                        <p class="mb-0">¡Todos los números se vendieron!</p>
-                    <?php else: ?>
-                        <p>Elegí un número libre de la cuadrícula y pedíselo a una persona de la junta
-                           o a los voluntarios de la ADI. Ellos lo registran a tu nombre.</p>
-                        <div class="adi-total mb-0">
-                            <span>Precio del número</span>
-                            <strong><?= $precio !== null ? dinero($precio) : 'Por definir' ?></strong>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php elseif (!$abierta): ?>
-                <div class="adi-card adi-empty">
-                    <strong>Rifa finalizada</strong>
-                    Ya no se venden números. Reabrila si necesitás corregir algo.
-                </div>
-            <?php elseif ($precio === null): ?>
-                <div class="adi-card adi-empty">
-                    <strong>Falta el precio por número</strong>
-                    <a href="form.php?id=<?= e($id) ?>">Editá la rifa</a> para indicarlo antes de vender.
-                </div>
-            <?php elseif (!$libres): ?>
-                <div class="adi-card adi-empty">
-                    <strong>¡Todos los números se vendieron!</strong>
-                    La rifa está completa.
-                </div>
-            <?php else: ?>
-                <form action="../rifas/vender.php" method="POST" class="adi-card adi-card-body">
-                    <h2 class="adi-section-title">Vender un número</h2>
-                    <?= campoCsrf() ?>
-                    <input type="hidden" name="rifa" value="<?= e($id) ?>">
-                    <div class="mb-3">
-                        <label for="numero" class="form-label">Número</label>
-                        <select class="form-select" id="numero" name="numero" required>
-                            <option value="">Elegí o tocá uno en la cuadrícula</option>
-                            <?php foreach ($libres as $n): ?>
-                                <option value="<?= $n ?>"><?= numeroRifa($n) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-1">
-                        <label for="contacto" class="form-label">Comprador</label>
-                        <select class="form-select" id="contacto" name="contacto" required>
-                            <option value="">¿Quién compra?</option>
-                            <?php foreach ($paraVender as $c): ?>
-                                <option value="<?= e($c['_id']) ?>"><?= e($c['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="form-text">
-                            ¿No aparece? <a href="<?= RAIZ ?>src/contactos/crear.php">Registrá el contacto</a>.
-                        </div>
-                    </div>
-                    <div class="adi-total">
-                        <span>Precio del número</span>
-                        <strong><?= dinero($precio) ?></strong>
-                    </div>
-                    <button type="submit" class="btn adi-btn-primary">Vender número</button>
-                </form>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <?php if ($admin): ?>
-    <div class="adi-card mt-4">
-        <?php if (!$numeros): ?>
-            <div class="adi-empty">
-                <strong>Todavía no se ha vendido ningún número</strong>
-                Elegí un número disponible en la cuadrícula para empezar.
-            </div>
-        <?php else: ?>
-            <div class="adi-table-meta">
-                <span><?= count($numeros) ?> <?= count($numeros) === 1 ? 'número vendido' : 'números vendidos' ?></span>
-                <span>Ordenados por número</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover adi-table">
-                    <thead>
-                        <tr><th>Número</th><th>Comprador</th><th>Vendido</th><th class="adi-num">Monto</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($numeros as $n): ?>
-                        <tr>
-                            <td><span class="adi-rifa-num is-sold is-inline"><?= numeroRifa($n['numero']) ?></span></td>
-                            <td><?= e($contactos[(string) $n['contacto_id']] ?? '—') ?></td>
-                            <td class="text-nowrap"><?= mostrarHora($n['fecha']) ?></td>
-                            <td class="adi-num"><?= dinero($n['monto']) ?></td>
-                            <td class="text-end">
-                                <?php if ($abierta): ?>
-                                    <form action="../rifas/anular.php" method="POST" class="d-inline"
-                                          onsubmit="return confirm('¿Anular el número <?= numeroRifa($n['numero']) ?>? Quedará libre otra vez.');">
-                                        <?= campoCsrf() ?>
-                                        <input type="hidden" name="id" value="<?= e($n['_id']) ?>">
-                                        <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
-                                    </form>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <script>
-    // Tocar un número disponible lo elige en el formulario
-    document.querySelectorAll('.adi-rifa-num[data-numero]').forEach(function (boton) {
-        boton.addEventListener('click', function () {
-            const select = document.getElementById('numero');
-            if (!select) return;
-            select.value = boton.dataset.numero;
-            document.querySelectorAll('.adi-rifa-num.is-picked').forEach(b => b.classList.remove('is-picked'));
-            boton.classList.add('is-picked');
-            document.getElementById('contacto').focus();
-        });
-    });
-    </script>
-
+    <?php require __DIR__ . '/_rifa.php'; ?>
 <?php else: ?>
     <?php // --------------------------------------------------- Turno o feria ?>
     <div class="<?= $admin ? 'adi-ventas-layout' : '' ?>">

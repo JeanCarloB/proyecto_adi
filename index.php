@@ -47,7 +47,9 @@ $modulos = [
             'Actividades próximas' => $resumen['actividades'],
             'Ventas registradas'   => $resumen['ventas'],
         ] : [],
-        'enlaces' => ['Actividades' => 'src/actividades/index.php', 'Ventas' => 'src/ventas/index.php'],
+        'enlaces' => esAdmin()
+            ? ['Actividades' => 'src/actividades/index.php', 'Ventas' => 'src/ventas/index.php']
+            : ['Actividades' => 'src/actividades/index.php', 'Mis compras' => 'src/actividades/mis.php'],
     ],
     ];
 

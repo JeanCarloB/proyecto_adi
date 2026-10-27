@@ -10,6 +10,8 @@
  *     precio en Decimal128. El total también es Decimal128.
  *   - Un número de rifa va del 0 al 99 y NO se puede vender dos veces en la
  *     misma rifa (índice único compuesto {rifa_id, numero}).
+ *   - Un número apartado por la comunidad se libera solo si nadie confirma
+ *     el pago (índice TTL sobre "vence"); uno pagado nunca tiene "vence".
  *
  * Índices de consulta: {actividad_id, fecha} para las ventas y el total de una
  * actividad, y {fecha: -1} para el listado general de ventas, que se ordena
@@ -127,8 +129,8 @@ aplicarValidador("ventas", { $jsonSchema: esquemaVentas });
 
 const esquemaRifas = {
   bsonType: "object",
-  title: "Número vendido de una rifa",
-  required: ["rifa_id", "numero", "contacto_id", "monto", "fecha"],
+  title: "Número vendido o apartado de una rifa",
+  required: ["rifa_id", "numero", "monto", "fecha"],
   additionalProperties: false,
   properties: {
     _id: { bsonType: "objectId" },
@@ -144,14 +146,43 @@ const esquemaRifas = {
     },
     contacto_id: {
       bsonType: "objectId",
-      description: "Quién compró el número (para avisarle si gana)",
+      description: "Quién compró el número (para avisarle si gana). Obligatorio una vez pagado",
     },
-    monto: { bsonType: "decimal", description: "Lo que pagó por el número" },
-    fecha: { bsonType: "date", description: "Momento de la venta" },
+    monto: { bsonType: "decimal", description: "Precio del número" },
+    fecha: { bsonType: "date", description: "Momento de la venta o del apartado" },
+    estado: {
+      enum: ["apartado", "pagado"],
+      description: "Sin estado = pagado (ventas de la junta y datos de carga anteriores al Issue #114)",
+    },
+    usuario_id: {
+      bsonType: "objectId",
+      description: "Cuenta de comunidad que apartó el número; con esto ve sus números en Mis compras",
+    },
+    nombre: { bsonType: "string", maxLength: 120, description: "Nombre de la cuenta que apartó" },
+    correo: { bsonType: "string", maxLength: 200, description: "Correo de la cuenta que apartó; al pagar se busca o se crea el contacto con él" },
+    vence: {
+      bsonType: "date",
+      description: "Solo en apartados. El índice TTL libera el número al pasar esta fecha si nadie confirmó el pago",
+    },
   },
 };
 
-aplicarValidador("rifas", { $jsonSchema: esquemaRifas });
+// Además del esquema (Issue #114): un apartado DEBE tener "vence" y la cuenta que
+// lo apartó; un número pagado NO puede tener "vence" (si no, el TTL lo borraría)
+// y SÍ debe tener contacto. Mismo patrón que las reservas de alquiler.
+const validadorRifas = {
+  $and: [
+    { $jsonSchema: esquemaRifas },
+    {
+      $or: [
+        { estado: "apartado", vence: { $exists: true }, usuario_id: { $exists: true } },
+        { estado: { $ne: "apartado" }, vence: { $exists: false }, contacto_id: { $exists: true } },
+      ],
+    },
+  ],
+};
+
+aplicarValidador("rifas", validadorRifas);
 
 // --- Índices --------------------------------------------------------------
 //
@@ -161,7 +192,13 @@ aplicarValidador("rifas", { $jsonSchema: esquemaRifas });
 print("\nÍndices del módulo de ventas:");
 
 adi.rifas.createIndex({ rifa_id: 1, numero: 1 }, { unique: true });
-print("  único {rifa_id, numero}: un número de rifa no se puede vender dos veces");
+print("  único {rifa_id, numero}: un número de rifa no se puede vender ni apartar dos veces");
+
+adi.rifas.createIndex({ vence: 1 }, { expireAfterSeconds: 0 });
+print("  TTL sobre vence: un número apartado sin pagar se libera solo (Issue #114)");
+
+adi.rifas.createIndex({ usuario_id: 1, fecha: -1 }, { partialFilterExpression: { usuario_id: { $exists: true } } });
+print("  parcial {usuario_id, fecha}: los números de cada persona en Mis compras");
 
 adi.ventas.createIndex({ actividad_id: 1, fecha: 1 });
 print("  compuesto {actividad_id, fecha}: ventas de una actividad y su total recaudado");
@@ -216,7 +253,11 @@ function verificar() {
       const claves = Object.keys(indice.key)
         .map(function (k) { return k + ":" + indice.key[k]; })
         .join(", ");
-      const sufijo = indice.unique ? " [único]" : "";
+      const extra = [];
+      if (indice.unique) extra.push("único");
+      if (indice.expireAfterSeconds !== undefined) extra.push("TTL");
+      if (indice.partialFilterExpression) extra.push("parcial");
+      const sufijo = extra.length ? " [" + extra.join(", ") + "]" : "";
       print("    índice " + indice.name + ": {" + claves + "}" + sufijo);
     });
   });

@@ -1226,3 +1226,28 @@ body > main.adi-page { flex: 1 0 auto; }
 .adi-equipo a { font-size: .8125rem; color: var(--adi-ink-2); }
 .adi-chips-tec { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; list-style: none; }
 .adi-chips-tec li { border: 1px solid var(--adi-border); background: var(--adi-subtle); border-radius: 999px; padding: .2rem .7rem; font-size: .8125rem; color: var(--adi-ink-2); }
+
+/* --- Rifas: apartados y números propios (Issue #114) ----------------------- */
+
+/* Apartado sin pagar: color de advertencia y borde punteado (no solo color) */
+.adi-rifa-num.is-held {
+    background: var(--adi-warn-bg);
+    border-color: #f0c987;
+    border-style: dashed;
+    color: var(--adi-warn-ink);
+}
+
+/* Número de la persona con sesión: contorno grueso del color del módulo */
+.adi-rifa-num.is-mine {
+    background: #fdf3ec;
+    border: 2px solid var(--adi-mod-ventas);
+    color: #9a3f0b;
+}
+
+.adi-rifa-num.is-held.is-inline,
+.adi-rifa-num.is-mine.is-inline { text-decoration: none; }
+
+.adi-rifa-swatch.is-held { background: var(--adi-warn-bg); border: 1px dashed #f0c987; }
+.adi-rifa-swatch.is-mine { background: #fdf3ec; border: 2px solid var(--adi-mod-ventas); }
+
+.adi-rifa-legend { flex-wrap: wrap; row-gap: .5rem; }
