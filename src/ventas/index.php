@@ -65,11 +65,76 @@ $ventas = $coleccion->aggregate([
 ])->toArray();
 
 $resumen = ['n' => 0, 'total' => 0.0];
-foreach ($coleccion->aggregate([
-    ['$match' => (object) $filtro],
-    ['$group' => ['_id' => null, 'n' => ['$sum' => 1], 'total' => ['$sum' => '$total']]],
-]) as $g) {
-    $resumen = ['n' => (int) $g['n'], 'total' => (float) (string) $g['total']];
+
+require_once dirname(__DIR__) . '/includes/redis.php';
+
+$redis = conexionRedis();
+
+$claveResumen = 'administra:ventas:resumen:' . hash(
+    'sha256',
+    json_encode([
+        'actividad' => isset($filtro['actividad_id'])
+            ? (string) $filtro['actividad_id']
+            : null,
+        'desde' => $fDesde,
+        'hasta' => $fHasta,
+    ])
+);
+
+
+$desdeCache = false;
+
+if ($redis !== null) {
+    try {
+        $guardado = $redis->get($claveResumen);
+
+        if ($guardado !== null) {
+            $datos = json_decode($guardado, true);
+
+            if (
+                is_array($datos)
+                && isset($datos['n'], $datos['total'])
+                && is_numeric($datos['n'])
+                && is_numeric($datos['total'])
+            ) {
+                $resumen = [
+                    'n' => (int) $datos['n'],
+                    'total' => (float) $datos['total'],
+                ];
+                $desdeCache = true;
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('ADIministra: no se pudo leer la caché de ventas: ' . $e->getMessage());
+    }
+}
+
+if (!$desdeCache) {
+    foreach ($coleccion->aggregate([
+        ['$match' => (object) $filtro],
+        ['$group' => [
+            '_id' => null,
+            'n' => ['$sum' => 1],
+            'total' => ['$sum' => '$total'],
+        ]],
+    ]) as $g) {
+        $resumen = [
+            'n' => (int) $g['n'],
+            'total' => (float) (string) $g['total'],
+        ];
+    }
+
+    if ($redis !== null) {
+        try {
+            $redis->setex(
+                $claveResumen,
+                60,
+                json_encode($resumen, JSON_THROW_ON_ERROR)
+            );
+        } catch (Throwable $e) {
+            error_log('ADIministra: no se pudo guardar la caché de ventas: ' . $e->getMessage());
+        }
+    }
 }
 
 // Turnos y ferias para el filtro de actividad

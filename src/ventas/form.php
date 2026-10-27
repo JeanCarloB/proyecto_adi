@@ -1,3 +1,4 @@
+
 <?php
 /**
  * Registrar o editar una venta de un turno o una feria (Issue #32).
@@ -104,6 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $coleccion->insertOne($datos);
                 $ok = 'venta';
             }
+
+            // Invalidar la caché después de guardar correctamente.
+            require_once dirname(__DIR__) . '/includes/redis.php';
+            invalidarCacheVentas();
+
             header('Location: ../actividades/ver.php?id=' . $actividad['_id'] . '&ok=' . $ok);
             exit;
         } catch (Throwable $e) {
