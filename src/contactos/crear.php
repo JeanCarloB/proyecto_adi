@@ -27,6 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = 'Seleccioná un tipo de contacto válido.';
     }
 
+	if ($telefono !== '' && !preg_match('/^[0-9]+$/', $telefono)) {
+    $errores[] = 'El teléfono debe contener únicamente números.';
+	}
+
     if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         $errores[] = 'Ingresá un correo electrónico válido.';
     }
