@@ -6,7 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 ## [Sin publicar]
 
 ### Agregado
-- `portal.yml`: ficha del proyecto para el portal del curso (Issue #103).
+- `portal.yml`: ficha del proyecto para el portal del curso (PR #106; Issue #103).
+- Resultados de las pruebas generales P1, P2 y P3 con capturas en `docs/pruebas.md` (PR #107; Issue #50).
+- **Instalación:** prueba de instalación desde cero siguiendo solo `docs/instalacion.md`, con su registro al final de la guía (PR #108; Issue #51).
+- **Alquileres:** guía del módulo con el guion de la demo en `docs/alquileres.md` y 9 capturas finales `s4-alquileres-*.png` (PR #109; Issue #19).
+- Cuadro de confirmación con el estilo de la aplicación (`adiConfirmar` y `data-confirmar` en `src/includes/layout.php`) en lugar de `confirm()` del navegador, usado en confirmar pago, cancelar reserva, aprobar y retirar solicitudes y activar o desactivar espacios (PR #109).
+- Bitácora `docs/seguimientos/S4.md` (Issue #55).
+
+### Cambiado
+- `docs/instalacion.md` corregido con lo que falló en la prueba desde cero: PHP sin XAMPP y `mongosh` en Windows (instalación y `PATH`), `ALTCHA_HMAC_KEY` obligatoria, paso de `crear_usuarios_prueba.php`, prueba con `php -S`, 5 verificaciones sin sesión y 6 con admin en `diagnostico.php`, y los síntomas reales en la tabla de problemas (PR #108).
+- `.env.example`: el comentario de `ALTCHA_HMAC_KEY` dice que es obligatoria y que es la clave del captcha del login (PR #108).
+
+### Corregido
+- **Alquileres:** *Confirmar pago* y *Cancelar reserva* desde la tarjeta del calendario fallaban con "El formulario venció" porque `calendario.js` no enviaba el token CSRF que exigen `confirmar.php` y `cancelar.php` desde el PR #95 (PR #109).
+- `docs/seguimientos/S3.md`: el captcha ALTCHA está en el inicio de sesión, no en el formulario de solicitudes.
 
 ## [0.3.0] - Seguimiento 3
 
