@@ -155,6 +155,7 @@ Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las
 │   ├── instalacion.md      Instalación desde cero
 │   ├── mediciones.md       Mediciones con y sin índice (explain)
 │   ├── pruebas.md          Pruebas documentadas
+│   ├── alquileres.md       Guía del módulo de alquileres y guion de su demo
 │   └── ventas.md           Guía del módulo de ventas y guion de su demo
 ├── data/                   Datos de prueba
 ├── scripts/                Carga de datos sintéticos y mediciones
@@ -245,6 +246,7 @@ Los cambios por versión están en [`CHANGELOG.md`](CHANGELOG.md).
 | [`docs/decisiones.md`](docs/decisiones.md) | Por qué el modelo, los índices y la seguridad quedaron así |
 | [`docs/mediciones.md`](docs/mediciones.md) | Consultas con y sin índice: `explain()`, 3 corridas y mediana |
 | [`docs/pruebas.md`](docs/pruebas.md) | Pruebas P1 a P9 con pasos, resultado esperado y obtenido |
+| [`docs/alquileres.md`](docs/alquileres.md) | Guía del módulo de alquileres y guion de su demo |
 | [`docs/ventas.md`](docs/ventas.md) | Guía del módulo de ventas y guion de su demo |
 | [`docs/seguimientos/`](docs/seguimientos/) | Bitácoras S1 a S4 |
 

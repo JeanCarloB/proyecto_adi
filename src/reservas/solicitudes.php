@@ -131,7 +131,9 @@ if (isset($errores[$_GET['error'] ?? ''])) {
                                         data-nombre="<?= e($s['nombre']) ?>">Rechazar</button>
                                 <?php if ($libre): ?>
                                     <form action="resolver_solicitud.php" method="POST" class="d-inline"
-                                          onsubmit="return confirm('¿Aprobar? Se aparta el espacio por <?= HORAS_APARTADO ?> horas a nombre de esta persona.');">
+                                          data-confirmar-titulo="Aprobar solicitud"
+                                          data-confirmar="<?= e(($esp['nombre'] ?? 'Espacio') . ' · ' . diaLargo($s['fecha']) . ' · ' . (FRANJAS[$s['franja']] ?? $s['franja']) . '. Se aparta por ' . HORAS_APARTADO . ' horas a nombre de ' . $s['nombre'] . ' mientras paga.') ?>"
+                                          data-confirmar-boton="Aprobar">
                                         <?= campoCsrf() ?>
                                         <input type="hidden" name="id" value="<?= e($s['_id']) ?>">
                                         <input type="hidden" name="accion" value="aprobar">
