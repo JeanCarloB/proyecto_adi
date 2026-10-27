@@ -35,6 +35,9 @@ define('RAIZ', calcularRaiz());
 
 require_once __DIR__ . '/sesion.php';   // usuarioActual(), esAdmin(), requiereLogin(), requiereRol()
 
+/** Repositorio público del proyecto (pie de página y Acerca de). */
+const REPO_URL = 'https://github.com/JeanCarloB/proyecto_adi';
+
 /** Módulos del sistema: nombre para mostrar y color (sale del logo). */
 const MODULOS = [
     'alquileres' => 'Alquiler de espacios',
@@ -200,6 +203,21 @@ function pie(): void
 {
     ?>
 </main>
+
+<footer class="adi-footer">
+    <div class="container">
+        <div class="adi-footer-main">
+            <span class="adi-wordmark"><b>ADI</b>ministra</span>
+            <span>Gestión comunal para Asociaciones de Desarrollo Integral</span>
+        </div>
+        <nav class="adi-footer-links" aria-label="Información del proyecto">
+            <a href="<?= RAIZ ?>acerca.php">Acerca de</a>
+            <a href="<?= REPO_URL ?>" target="_blank" rel="noopener">Código en GitHub</a>
+            <a href="<?= REPO_URL ?>/blob/main/LICENSE" target="_blank" rel="noopener">Licencia MIT</a>
+        </nav>
+        <small class="adi-footer-legal">© 2026 Grupo 4 · Tópicos Avanzados de Bases de Datos · Universidad Nacional · Proyecto open source</small>
+    </div>
+</footer>
 
 <!-- Confirmación con el estilo de la aplicación (reemplaza al confirm() del navegador).
      Uso en un formulario: data-confirmar="¿Pregunta?" y, opcionales,
