@@ -39,6 +39,18 @@ const HORAS_APARTADO_RIFA = 48;
 /** Cuántos números puede tener apartados (sin pagar) una persona en una misma rifa. */
 const MAX_APARTADOS_RIFA = 5;
 
+/** Productos que puede tener el menú de encargos de un turno o feria (Issue #115). */
+const MAX_MENU = 30;
+
+/** Encargos pendientes que puede tener una persona en una misma actividad. */
+const MAX_ENCARGOS = 3;
+
+/** Unidades máximas de un producto en un encargo. */
+const MAX_UNIDADES_ENCARGO = 20;
+
+/** Días después de la actividad en que un encargo pendiente se borra solo (TTL sobre "expira"). */
+const DIAS_EXPIRA_ENCARGO = 2;
+
 /** Máximo de productos distintos en una sola venta. */
 const MAX_ITEMS = 15;
 
@@ -239,6 +251,45 @@ function leerItems(array $datos): array
     }
 
     return [$items, $total, $errores, $filas];
+}
+
+/**
+ * Lee el menú de encargos del formulario de actividad (menu_producto[], menu_precio[]).
+ * Las filas vacías se ignoran. Devuelve [menú para guardar, errores, filas para volver a mostrar].
+ *
+ * @return array{0: array, 1: string[], 2: array}
+ */
+function leerMenu(array $datos): array
+{
+    $productos = is_array($datos['menu_producto'] ?? null) ? $datos['menu_producto'] : [];
+    $precios   = is_array($datos['menu_precio'] ?? null) ? $datos['menu_precio'] : [];
+    $menu = $errores = $filas = $vistos = [];
+
+    foreach (array_keys($productos) as $i) {
+        $producto = texto($productos[$i] ?? '');
+        $precio   = texto($precios[$i] ?? '');
+        if ($producto === '' && $precio === '') {
+            continue;
+        }
+        $filas[] = ['producto' => $producto, 'precio' => $precio];
+        $n = count($filas);
+        if ($producto === '' || mb_strlen($producto) > 60) {
+            $errores[] = "Revisá el nombre del producto $n del menú.";
+        } elseif (isset($vistos[mb_strtolower($producto)])) {
+            $errores[] = "El producto \"$producto\" está repetido en el menú.";
+        }
+        if (!is_numeric($precio) || (float) $precio <= 0) {
+            $errores[] = "El precio del producto $n del menú debe ser mayor que cero.";
+        }
+        $vistos[mb_strtolower($producto)] = true;
+        if (!$errores) {
+            $menu[] = ['producto' => $producto, 'precio' => decimal($precio)];
+        }
+    }
+    if (count($filas) > MAX_MENU) {
+        $errores[] = 'El menú puede tener como máximo ' . MAX_MENU . ' productos.';
+    }
+    return [$menu, $errores, $filas];
 }
 
 /**

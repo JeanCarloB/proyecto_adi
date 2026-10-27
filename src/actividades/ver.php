@@ -91,6 +91,21 @@ if ($esRifa) {
             ->toArray();
         $contactos = nombresContactos($baseDatos, $ventas);
     }
+
+    // Encargos de la comunidad (Issue #115). La junta ve los pendientes, del más viejo al
+    // más nuevo, con el índice {actividad_id, estado, creado}; la persona ve solo los suyos.
+    $menu = $actividad['menu'] ?? [];
+    $encargosPendientes = $misEncargos = [];
+    $coleccionEncargos = $baseDatos->selectCollection('encargos');
+    if ($admin) {
+        $encargosPendientes = $coleccionEncargos
+            ->find(['actividad_id' => $id, 'estado' => 'pendiente'], ['sort' => ['creado' => 1], 'limit' => 100])
+            ->toArray();
+    } else {
+        $misEncargos = $coleccionEncargos
+            ->find(['actividad_id' => $id, 'usuario_id' => miUsuarioId()], ['sort' => ['creado' => -1], 'limit' => 10])
+            ->toArray();
+    }
 }
 
 encabezado($actividad['nombre'], 'actividades');
@@ -144,6 +159,9 @@ avisoExito([
     'apartado'       => 'Apartaste el número ' . numeroRifa(texto($_GET['numero'] ?? '0'))
         . '. Pagáselo a la junta en las próximas ' . HORAS_APARTADO_RIFA . ' horas; si no, se libera solo.',
     'pagado'         => 'Pago confirmado: el número ' . numeroRifa(texto($_GET['numero'] ?? '0')) . ' quedó vendido.',
+    'encargo'        => 'Tu encargo quedó registrado. La junta lo prepara y te lo entrega en la actividad; lo pagás al recibirlo.',
+    'encargo-entregado' => 'Encargo entregado: quedó registrado como venta.',
+    'encargo-cancelado' => 'El encargo se canceló.',
 ]);
 
 $error = texto($_GET['error'] ?? '');
@@ -154,6 +172,11 @@ $mensajesError = [
         . ' ya no está disponible: alguien lo apartó o lo compró hace un momento. Elegí otro.',
     'limite'   => 'Ya tenés ' . MAX_APARTADOS_RIFA . ' números apartados sin pagar en esta rifa. Pagalos o liberá alguno en Mis compras.',
     'vencido'  => 'Ese apartado ya no existe: venció o alguien lo liberó.',
+    'sin-encargos'     => 'Esta actividad no recibe encargos.',
+    'vacio'            => 'Elegí al menos un producto para encargar.',
+    'cantidad'         => 'Cada producto se puede encargar hasta ' . MAX_UNIDADES_ENCARGO . ' unidades.',
+    'limite-encargos'  => 'Ya tenés ' . MAX_ENCARGOS . ' encargos pendientes en esta actividad. Esperá a que la junta los entregue o retirá alguno en Mis compras.',
+    'encargo-resuelto' => 'Ese encargo ya no está pendiente: alguien lo entregó o lo canceló.',
     'cerrada'  => 'La actividad está finalizada: no acepta ventas ni cambios. Reabrila si necesitás corregir algo.',
     'datos'    => 'Revisá el número y el contacto: alguno no es válido.',
     'precio'   => 'Esta rifa no tiene precio por número. Editá la actividad para indicarlo.',
@@ -161,7 +184,7 @@ $mensajesError = [
     'general'  => 'No se pudo completar la operación. Intentá de nuevo.',
 ];
 if (isset($mensajesError[$error])) {
-    aviso(in_array($error, ['repetido', 'ocupado', 'cerrada', 'limite', 'vencido'], true) ? 'warn' : 'danger', $mensajesError[$error]);
+    aviso(in_array($error, ['repetido', 'ocupado', 'cerrada', 'limite', 'vencido', 'vacio', 'cantidad', 'limite-encargos', 'encargo-resuelto', 'sin-encargos'], true) ? 'warn' : 'danger', $mensajesError[$error]);
 }
 ?>
 
@@ -204,79 +227,6 @@ if (isset($mensajesError[$error])) {
 <?php if ($esRifa): ?>
     <?php require __DIR__ . '/_rifa.php'; ?>
 <?php else: ?>
-    <?php // --------------------------------------------------- Turno o feria ?>
-    <div class="<?= $admin ? 'adi-ventas-layout' : '' ?>">
-        <?php if ($admin): ?>
-        <div class="adi-card">
-            <?php if (!$ventas): ?>
-                <div class="adi-empty">
-                    <strong>Todavía no hay ventas</strong>
-                    <?php if ($abierta): ?>
-                        <a href="../ventas/form.php?actividad=<?= e($id) ?>">Registrá la primera venta</a>.
-                    <?php else: ?>
-                        La actividad se finalizó sin ventas registradas.
-                    <?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="adi-table-meta">
-                    <span>
-                        <?= count($ventas) === LIMITE_VENTAS
-                            ? 'Últimas ' . LIMITE_VENTAS . ' de ' . number_format($resumen['n'], 0, ',', '.') . ' ventas'
-                            : count($ventas) . ' ' . (count($ventas) === 1 ? 'venta' : 'ventas') ?>
-                    </span>
-                    <a class="adi-link-quiet" href="../ventas/index.php?actividad=<?= e($id) ?>">Ver todas con filtros</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover adi-table">
-                        <thead>
-                            <tr><th>Hora</th><th>Productos</th><th>Contacto</th><th class="adi-num">Total</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach ($ventas as $v): ?>
-                            <tr>
-                                <td class="text-nowrap"><?= mostrarHora($v['fecha']) ?></td>
-                                <td><?= e(resumenItems($v['items'])) ?></td>
-                                <td><?= isset($v['contacto_id'])
-                                    ? e($contactos[(string) $v['contacto_id']] ?? '—')
-                                    : '<span class="adi-sub">—</span>' ?></td>
-                                <td class="adi-num"><?= dinero($v['total']) ?></td>
-                                <td class="text-end text-nowrap">
-                                    <?php if ($abierta): ?>
-                                        <a href="../ventas/form.php?id=<?= e($v['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
-                                        <form action="../ventas/anular.php" method="POST" class="d-inline"
-                                              onsubmit="return confirm('¿Anular esta venta? Dejará de sumar al total.');">
-                                            <?= campoCsrf() ?>
-                                            <input type="hidden" name="id" value="<?= e($v['_id']) ?>">
-                                            <input type="hidden" name="volver" value="actividad">
-                                            <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Anular</button>
-                                        </form>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-
-        <div class="adi-card adi-card-body">
-            <h2 class="adi-section-title">Productos más vendidos</h2>
-            <?php if (!$productos): ?>
-                <p class="adi-sub mb-0">Aparecen aquí cuando haya ventas.</p>
-            <?php else: ?>
-                <ul class="adi-rates">
-                    <?php foreach ($productos as $p): ?>
-                        <li>
-                            <span><?= e($p['_id']) ?> <small class="adi-sub">· <?= (int) $p['unidades'] ?> u.</small></span>
-                            <strong><?= dinero((string) $p['monto']) ?></strong>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-                <p class="adi-sub mb-0">Calculado con <code>$unwind</code> + <code>$group</code> sobre todas las ventas.</p>
-            <?php endif; ?>
-        </div>
-    </div>
+    <?php require __DIR__ . '/_turno.php'; ?>
 <?php endif; ?>
 <?php pie();

@@ -1251,3 +1251,36 @@ body > main.adi-page { flex: 1 0 auto; }
 .adi-rifa-swatch.is-mine { background: #fdf3ec; border: 2px solid var(--adi-mod-ventas); }
 
 .adi-rifa-legend { flex-wrap: wrap; row-gap: .5rem; }
+
+/* --- Menú de encargos y encargos (Issue #115) ------------------------------ */
+
+.adi-menu-head,
+.adi-menu-fila {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 36px;
+    gap: .6rem;
+    align-items: center;
+}
+
+.adi-menu-head {
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--adi-muted);
+    padding-bottom: .4rem;
+}
+
+.adi-menu-fila { padding: .3rem 0; }
+
+/* Lista de productos para encargar: nombre y precio a la izquierda, cantidad a la derecha */
+.adi-encargo-lista { list-style: none; padding: 0; margin: 0 0 1rem; border-top: 1px solid var(--adi-border); }
+.adi-encargo-lista li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: .75rem;
+    align-items: center;
+    padding: .55rem 0;
+    border-bottom: 1px dashed var(--adi-border);
+}
+.adi-encargo-lista strong { font-weight: 500; display: block; }

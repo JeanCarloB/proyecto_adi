@@ -17,6 +17,7 @@ $nombre = '';
 $tipo   = texto($_GET['tipo'] ?? '');
 $fecha  = '';
 $precio = '';
+$menuFilas = [];   // menú de encargos (Issue #115): solo turnos y ferias
 
 // ¿Tiene ventas o números vendidos? Entonces ya no puede cambiar de tipo:
 // una feria con ventas no puede convertirse en rifa, ni al revés.
@@ -36,6 +37,9 @@ if ($editar) {
         $tipo   = $actividad['tipo'];
         $fecha  = fechaInput($actividad['fecha']);
         $precio = isset($actividad['precio_numero']) ? (string) (float) (string) $actividad['precio_numero'] : '';
+        foreach ($actividad['menu'] ?? [] as $m) {
+            $menuFilas[] = ['producto' => $m['producto'], 'precio' => (string) (float) (string) $m['precio']];
+        }
     }
 }
 
@@ -47,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tipo   = $conMovimientos ? $actividad['tipo'] : texto($_POST['tipo'] ?? '');
     $fecha  = texto($_POST['fecha'] ?? '');
     $precio = texto($_POST['precio_numero'] ?? '');
+    [$menu, $erroresMenu, $menuFilas] = leerMenu($_POST);
 
     // Validaciones en la aplicación: dan mensajes claros al usuario.
     // Las mismas reglas las vuelve a exigir el JSON Schema en la base.
@@ -63,17 +68,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($tipo === 'rifa' && (!is_numeric($precio) || (float) $precio <= 0)) {
         $errores[] = 'Indicá el precio de cada número de la rifa.';
     }
+    if ($tipo !== 'rifa') {
+        $errores = array_merge($errores, $erroresMenu);
+    }
 
     if (!$errores) {
         $datos = ['nombre' => $nombre, 'tipo' => $tipo, 'fecha' => $dia];
         if ($tipo === 'rifa') {
             $datos['precio_numero'] = decimal($precio);
+        } elseif ($menu) {
+            $datos['menu'] = $menu;   // la comunidad encarga de este menú, con estos precios
         }
         try {
             if ($editar) {
                 $cambio = ['$set' => $datos];
                 if ($tipo !== 'rifa') {
                     $cambio['$unset'] = ['precio_numero' => ''];   // solo las rifas tienen precio por número
+                }
+                if ($tipo === 'rifa' || !$menu) {
+                    $cambio['$unset']['menu'] = '';               // sin menú no se reciben encargos
                 }
                 $coleccion->updateOne(['_id' => $id], $cambio);
                 header('Location: ver.php?id=' . $id . '&ok=editada');
@@ -148,6 +161,32 @@ encabezado($titulo, 'actividades');
             </div>
         </div>
 
+        <div id="campo-menu" class="mt-3" <?= $tipo === 'rifa' ? 'hidden' : '' ?>>
+            <h2 class="adi-section-title mb-1">Menú para encargos <span class="adi-sub">(opcional)</span></h2>
+            <p class="adi-sub mb-2">Si lo llenás, la comunidad puede encargar estos productos antes de la actividad.</p>
+            <div class="adi-menu-head" aria-hidden="true"><span>Producto</span><span>Precio</span><span></span></div>
+            <div id="menu-filas">
+                <?php foreach ($menuFilas ?: [['producto' => '', 'precio' => '']] as $m): ?>
+                    <div class="adi-menu-fila">
+                        <input type="text" class="form-control" name="menu_producto[]" list="productos-menu"
+                               maxlength="60" placeholder="Tamal" aria-label="Producto" value="<?= e($m['producto']) ?>">
+                        <div class="input-group">
+                            <span class="input-group-text">₡</span>
+                            <input type="number" class="form-control" name="menu_precio[]" min="1" step="1"
+                                   aria-label="Precio" value="<?= e($m['precio']) ?>">
+                        </div>
+                        <button type="button" class="btn btn-sm adi-btn-quiet-danger adi-menu-quitar" aria-label="Quitar producto">✕</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="btn btn-sm adi-btn-soft mt-2" id="menu-agregar">+ Agregar producto</button>
+            <datalist id="productos-menu">
+                <?php foreach (PRODUCTOS_SUGERIDOS as $nombreProducto => $precioSugerido): ?>
+                    <option value="<?= e($nombreProducto) ?>"></option>
+                <?php endforeach; ?>
+            </datalist>
+        </div>
+
         <div class="d-flex gap-2 pt-2 mt-3 border-top" style="border-color: var(--adi-border) !important">
             <button type="submit" class="btn adi-btn-primary mt-3">Guardar actividad</button>
             <a href="<?= $editar ? 'ver.php?id=' . e($id) : 'index.php' ?>" class="btn adi-btn-ghost mt-3">Cancelar</a>
@@ -156,18 +195,44 @@ encabezado($titulo, 'actividades');
 </div>
 
 <script>
-// El precio por número solo aplica a las rifas
+// El precio por número solo aplica a las rifas; el menú, a turnos y ferias
 (function () {
     const tipo  = document.getElementById('tipo');
     const campo = document.getElementById('campo-precio');
     const input = document.getElementById('precio_numero');
+    const menu  = document.getElementById('campo-menu');
     function actualizar() {
         const esRifa = tipo.value === 'rifa';
         campo.hidden = !esRifa;
         input.required = esRifa;
+        menu.hidden = esRifa;
     }
     tipo.addEventListener('change', actualizar);
     actualizar();
+
+    // Filas del menú: agregar, quitar y proponer el precio habitual del producto
+    const sugeridos = <?= json_encode(PRODUCTOS_SUGERIDOS, JSON_UNESCAPED_UNICODE) ?>;
+    const filas = document.getElementById('menu-filas');
+    document.getElementById('menu-agregar').addEventListener('click', function () {
+        if (filas.children.length >= <?= MAX_MENU ?>) return;
+        const nueva = filas.firstElementChild.cloneNode(true);
+        nueva.querySelectorAll('input').forEach(i => i.value = '');
+        filas.appendChild(nueva);
+        nueva.querySelector('input').focus();
+    });
+    filas.addEventListener('click', function (ev) {
+        const boton = ev.target.closest('.adi-menu-quitar');
+        if (!boton) return;
+        const fila = boton.closest('.adi-menu-fila');
+        if (filas.children.length > 1) fila.remove();
+        else fila.querySelectorAll('input').forEach(i => i.value = '');
+    });
+    filas.addEventListener('input', function (ev) {
+        if (ev.target.name === 'menu_producto[]' && ev.target.value in sugeridos) {
+            const precio = ev.target.closest('.adi-menu-fila').querySelector('[name="menu_precio[]"]');
+            if (!precio.value) precio.value = sugeridos[ev.target.value];
+        }
+    });
 })();
 </script>
 <?php pie();
