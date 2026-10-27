@@ -30,7 +30,14 @@ if (!aceptaVentas(buscarActividad($baseDatos, $venta['actividad_id']))) {
     exit;
 }
 
-$coleccion->deleteOne(['_id' => $id]);
+
+$resultado = $coleccion->deleteOne(['_id' => $id]);
+
+if ($resultado->getDeletedCount() > 0) {
+    require_once dirname(__DIR__) . '/includes/redis.php';
+    invalidarCacheVentas();
+}
+
 
 header('Location: ' . $destino . 'ok=' . ($alDetalle ? 'venta-anulada' : 'anulada'));
 exit;
