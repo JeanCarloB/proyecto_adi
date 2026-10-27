@@ -1190,3 +1190,39 @@ span.adi-cal-event { cursor: default; }
 }
 .adi-account small { color: var(--adi-muted); margin-top: .15rem; }
 .adi-topbar .adi-user .adi-nav-admin { font-size: .8125rem; text-decoration: none; margin-right: .5rem; }
+
+/* Pie de página y Acerca de */
+body { display: flex; flex-direction: column; min-height: 100vh; }
+body > main.adi-page { flex: 1 0 auto; }
+.adi-footer {
+    border-top: 1px solid var(--adi-border);
+    background: var(--adi-surface);
+    color: var(--adi-muted);
+    font-size: .8125rem;
+    padding: 1.25rem 0;
+    margin-top: 2.5rem;
+}
+.adi-footer .container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1.5rem;
+}
+.adi-footer-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem; color: var(--adi-ink-2); }
+.adi-footer-main .adi-wordmark { font-size: 1rem; }
+.adi-footer-links { display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+.adi-footer-links a { color: var(--adi-ink-2); text-decoration: none; font-weight: 500; }
+.adi-footer-links a:hover { color: var(--adi-ink); text-decoration: underline; }
+.adi-footer-legal { flex-basis: 100%; }
+
+.adi-acerca { max-width: 860px; }
+.adi-acerca h2 { font-size: 1.125rem; font-weight: 700; margin: 2rem 0 .75rem; }
+.adi-acerca p { color: var(--adi-ink-2); line-height: 1.6; }
+.adi-equipo { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; }
+.adi-equipo .adi-card { padding: 1rem 1.1rem; }
+.adi-equipo strong { display: block; font-size: .9375rem; }
+.adi-equipo span { display: block; color: var(--adi-muted); font-size: .8125rem; margin: .15rem 0 .5rem; }
+.adi-equipo a { font-size: .8125rem; color: var(--adi-ink-2); }
+.adi-chips-tec { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; list-style: none; }
+.adi-chips-tec li { border: 1px solid var(--adi-border); background: var(--adi-subtle); border-radius: 999px; padding: .2rem .7rem; font-size: .8125rem; color: var(--adi-ink-2); }

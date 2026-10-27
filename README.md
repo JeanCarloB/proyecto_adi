@@ -164,6 +164,7 @@ Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las
 ├── .htaccess               Bloqueo web de archivos sensibles
 ├── composer.json           Dependencias PHP
 ├── diagnostico.php         Verificación de entorno y conexión
+├── acerca.php              Acerca de: equipo, curso y enlaces (pública)
 ├── index.php               Portada con acceso a los módulos
 ├── login.php               Inicio de sesión con captcha
 └── logout.php              Cierre de sesión
