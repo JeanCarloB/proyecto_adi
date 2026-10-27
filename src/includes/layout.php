@@ -200,6 +200,61 @@ function pie(): void
 {
     ?>
 </main>
+
+<!-- Confirmación con el estilo de la aplicación (reemplaza al confirm() del navegador).
+     Uso en un formulario: data-confirmar="¿Pregunta?" y, opcionales,
+     data-confirmar-titulo, data-confirmar-boton y data-confirmar-peligro="1".
+     Desde JavaScript: adiConfirmar('¿Pregunta?', {titulo, boton, peligro}).then(ok => ...) -->
+<dialog id="adi-confirmar" class="adi-dialog adi-dialog--confirmar" aria-labelledby="adi-confirmar-titulo">
+    <div class="adi-dialog-head">
+        <h2 class="adi-dialog-title" id="adi-confirmar-titulo">¿Confirmar?</h2>
+        <button type="button" class="adi-dialog-close" data-respuesta="no" aria-label="Cerrar">&times;</button>
+    </div>
+    <p class="adi-confirmar-texto" id="adi-confirmar-texto"></p>
+    <div class="adi-dialog-actions">
+        <button type="button" class="btn adi-btn-ghost" data-respuesta="no">Volver</button>
+        <button type="button" class="btn adi-btn-primary" data-respuesta="si" id="adi-confirmar-si">Aceptar</button>
+    </div>
+</dialog>
+<script>
+(() => {
+    const dlg = document.getElementById('adi-confirmar');
+    if (!dlg || typeof dlg.showModal !== 'function') {
+        window.adiConfirmar = (texto) => Promise.resolve(window.confirm(texto));   // navegadores viejos
+        return;
+    }
+    const si = document.getElementById('adi-confirmar-si');
+    let resolver = null;
+
+    window.adiConfirmar = (texto, op = {}) => new Promise((resolve) => {
+        document.getElementById('adi-confirmar-titulo').textContent = op.titulo || '¿Confirmar?';
+        document.getElementById('adi-confirmar-texto').textContent = texto;
+        si.textContent = op.boton || 'Aceptar';
+        si.className = 'btn ' + (op.peligro ? 'adi-btn-danger' : 'adi-btn-primary');
+        resolver = resolve;
+        dlg.showModal();
+        si.focus();
+    });
+
+    const responder = (ok) => { if (resolver) { resolver(ok); resolver = null; } dlg.close(); };
+    dlg.querySelectorAll('[data-respuesta]').forEach((b) =>
+        b.addEventListener('click', () => responder(b.dataset.respuesta === 'si')));
+    dlg.addEventListener('cancel', (ev) => { ev.preventDefault(); responder(false); });   // Esc
+    dlg.addEventListener('click', (ev) => { if (ev.target === dlg) responder(false); });  // clic fuera
+
+    // Formularios con data-confirmar: se pregunta antes de enviar
+    document.addEventListener('submit', (ev) => {
+        const form = ev.target;
+        if (!(form instanceof HTMLFormElement) || !form.dataset.confirmar) return;
+        ev.preventDefault();
+        adiConfirmar(form.dataset.confirmar, {
+            titulo: form.dataset.confirmarTitulo,
+            boton: form.dataset.confirmarBoton,
+            peligro: form.dataset.confirmarPeligro === '1',
+        }).then((ok) => { if (ok) form.submit(); });   // submit() no vuelve a disparar este evento
+    });
+})();
+</script>
 </body>
 </html>
     <?php

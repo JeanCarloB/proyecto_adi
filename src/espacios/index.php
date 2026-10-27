@@ -68,9 +68,12 @@ avisoExito([
                            class="btn btn-sm adi-btn-soft">Reservar</a>
                     <?php endif; ?>
                     <form action="estado.php" method="POST" class="ms-auto"
-                          onsubmit="return confirm('<?= $activo
-                              ? '¿Desactivar este espacio? Ya no se podrá reservar.'
-                              : '¿Volver a activar este espacio?' ?>');">
+                          data-confirmar-titulo="<?= $activo ? 'Desactivar espacio' : 'Activar espacio' ?>"
+                          data-confirmar="<?= e($espacio['nombre'] . ($activo
+                              ? ': ya no se podrá reservar. Las reservas que tiene se conservan.'
+                              : ': vuelve a aparecer en el calendario para reservar.')) ?>"
+                          data-confirmar-boton="<?= $activo ? 'Desactivar' : 'Activar' ?>"
+                          <?= $activo ? 'data-confirmar-peligro="1"' : '' ?>>
                         <?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?= e($espacio['_id']) ?>">
                         <input type="hidden" name="activo" value="<?= $activo ? '0' : '1' ?>">

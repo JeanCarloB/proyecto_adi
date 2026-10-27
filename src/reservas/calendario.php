@@ -170,6 +170,7 @@ function urlMes(string $mes, string $filtro): string
 
 // Datos que usa la tarjeta de detalle en el navegador
 $datosJs = [
+    'csrf'     => tokenCsrf(),   // confirmar y cancelar exigen el token (exigirCsrf)
     'reservas' => $reservas,
     'porDia'   => $porDia,
     'dias'     => array_map(fn ($d) => ['titulo' => $d['titulo'], 'pasado' => $d['pasado']], $dias),

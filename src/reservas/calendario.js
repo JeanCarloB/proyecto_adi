@@ -35,12 +35,18 @@
         return 'crear.php?' + q.toString();
     }
 
-    /** Formulario POST con confirmación (confirmar pago / cancelar). */
-    function formAccion(accion, id, texto, clase, pregunta) {
+    /** Formulario POST con confirmación (confirmar pago / cancelar), con el cuadro de layout.php. */
+    function formAccion(accion, id, texto, clase, pregunta, peligro) {
         return el('form', {
             action: accion, method: 'POST', class: 'd-inline',
-            onsubmit: (ev) => { if (!confirm(pregunta)) ev.preventDefault(); },
+            onsubmit: (ev) => {
+                ev.preventDefault();
+                const form = ev.currentTarget;
+                adiConfirmar(pregunta, { titulo: texto, boton: texto, peligro: !!peligro })
+                    .then((ok) => { if (ok) form.submit(); });
+            },
         },
+            el('input', { type: 'hidden', name: 'csrf', value: datos.csrf }),
             el('input', { type: 'hidden', name: 'id', value: id }),
             el('input', { type: 'hidden', name: 'volver', value: 'calendario' }),
             el('input', { type: 'hidden', name: 'mes', value: datos.mes }),
@@ -96,13 +102,13 @@
 
         const acciones = el('div', { class: 'adi-dialog-actions' },
             desdeDia ? el('button', { type: 'button', class: 'btn btn-sm adi-btn-ghost me-auto', onclick: () => verDia(r.dia) }, '← Volver al día') : null,
-            formAccion('cancelar.php', r.id, 'Cancelar reserva', 'adi-btn-quiet-danger', '¿Cancelar esta reserva? El horario quedará libre.'),
+            formAccion('cancelar.php', r.id, 'Cancelar reserva', 'adi-btn-quiet-danger', 'El horario queda libre para que otra persona lo reserve.', true),
             // Las reservas de días pasados quedan como historial: no se editan
             r.dia >= datos.hoy
                 ? el('button', { type: 'button', class: 'btn btn-sm adi-btn-ghost', onclick: () => editarReserva(id, desdeDia) }, 'Editar')
                 : null,
             r.estado === 'apartado'
-                ? formAccion('confirmar.php', r.id, 'Confirmar pago', 'adi-btn-primary', '¿Confirmar el pago de esta reserva?')
+                ? formAccion('confirmar.php', r.id, 'Confirmar pago', 'adi-btn-primary', 'La reserva queda permanente y ya no vence.')
                 : null,
         );
 

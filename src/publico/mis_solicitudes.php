@@ -86,7 +86,10 @@ if (isset($_GET['error'])) {
                         </td>
                         <td class="text-end">
                             <?php if ($s['estado'] === 'pendiente'): ?>
-                                <form method="POST" class="d-inline" onsubmit="return confirm('¿Retirar esta solicitud?');">
+                                <form method="POST" class="d-inline"
+                                      data-confirmar-titulo="Retirar solicitud"
+                                      data-confirmar="La junta ya no la va a ver. Si cambiás de idea, podés pedir el espacio otra vez."
+                                      data-confirmar-boton="Retirar" data-confirmar-peligro="1">
                                     <?= campoCsrf() ?>
                                     <input type="hidden" name="id" value="<?= e($s['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Retirar</button>

@@ -215,14 +215,18 @@ if (($_GET['error'] ?? '') === 'confirmar') {
                             <a href="editar.php?id=<?= e($r['_id']) ?>" class="btn btn-sm adi-btn-ghost">Editar</a>
                             <?php if ($apartado): ?>
                                 <form action="confirmar.php" method="POST" class="d-inline"
-                                      onsubmit="return confirm('¿Confirmar el pago de esta reserva?');">
+                                      data-confirmar-titulo="Confirmar pago"
+                                      data-confirmar="La reserva queda permanente y ya no vence."
+                                      data-confirmar-boton="Confirmar pago">
                                     <?= campoCsrf() ?>
                                     <input type="hidden" name="id" value="<?= e($r['_id']) ?>">
                                     <button type="submit" class="btn btn-sm adi-btn-soft">Confirmar pago</button>
                                 </form>
                             <?php endif; ?>
                             <form action="cancelar.php" method="POST" class="d-inline"
-                                  onsubmit="return confirm('¿Cancelar esta reserva? El horario quedará libre.');">
+                                  data-confirmar-titulo="Cancelar reserva"
+                                  data-confirmar="El horario queda libre para que otra persona lo reserve."
+                                  data-confirmar-boton="Cancelar reserva" data-confirmar-peligro="1">
                                 <?= campoCsrf() ?>
                                 <input type="hidden" name="id" value="<?= e($r['_id']) ?>">
                                 <button type="submit" class="btn btn-sm adi-btn-quiet-danger">Cancelar</button>

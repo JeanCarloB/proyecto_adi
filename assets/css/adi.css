@@ -874,6 +874,9 @@ body {
     font-weight: 600;
 }
 .adi-dialog textarea.form-control { resize: vertical; min-height: 5.5rem; }
+.adi-dialog--confirmar { width: min(420px, calc(100vw - 32px)); }
+.adi-dialog--confirmar .adi-dialog-head { margin-bottom: .5rem; align-items: center; }
+.adi-confirmar-texto { margin: 0; color: var(--adi-ink-2); font-size: .9375rem; line-height: 1.5; }
 .adi-motivo-pie {
     display: flex;
     justify-content: space-between;
