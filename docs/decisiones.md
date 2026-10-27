@@ -102,6 +102,21 @@ El listado trae el nombre de la actividad y del comprador con `$lookup`. El orde
 ### 11. Control de acceso propio
 `src/includes/ventas.php` reutiliza las funciones generales de `alquileres.php` (dinero, fechas, validación de ids), pero no su control de acceso, que manda a la comunidad al calendario de alquileres. Por eso define `ACCESO_PROPIO` y aplica el suyo: cualquier usuario con sesión consulta, y las acciones que cambian datos exigen rol `admin`, método POST y token CSRF en el servidor (`exigirAccionAdmin()`). Esconder los botones es solo comodidad: la regla la aplica el servidor (pruebas P9).
 
+### 12. Números apartados por la comunidad (Issue #114)
+Un vecino aparta un número desde el sistema y lo paga después a la junta. El apartado es un documento más de `rifas` con `estado: "apartado"` y `vence` = ahora + 48 h:
+- **Mismo índice único.** `{rifa_id, numero}` aplica igual a apartados y vendidos, así que dos personas no pueden tener el mismo número aunque lo pidan en el mismo instante.
+- **Vence solo.** Un índice TTL sobre `vence` borra el apartado que nadie pagó, como los apartados de alquiler, y no hace falta ninguna tarea programada.
+- **El validador separa los estados.** Un apartado exige `vence` y la cuenta que lo apartó. Uno pagado no puede tener `vence`, porque el TTL lo borraría, y debe tener contacto. Los documentos viejos sin `estado` cuentan como pagados.
+- **Confirmar el pago en una transacción.** Se busca o se crea el contacto por el correo de la cuenta y el número pasa a pagado en la misma operación. Si el apartado venció entre medio, se deshace todo y no queda un contacto de más.
+- **Límites.** El total recaudado solo suma números pagados, y cada persona puede tener como máximo 5 apartados sin pagar por rifa.
+
+### 13. Encargos en turnos y ferias (Issue #115)
+- **El menú va embebido en la actividad** (`menu: [{producto, precio}]`): son pocos productos y siempre se leen con ella.
+- **El encargo solo manda cantidades.** El nombre y el precio salen del menú guardado y el total lo calcula el servidor, así que nadie puede encargar a otro precio desde el formulario.
+- **Colección propia `encargos`**, en lugar de una venta con otro estado. Un encargo todavía no es dinero recaudado: puede cancelarse o no retirarse. Mezclarlos en `ventas` obligaría a filtrar el estado en todos los totales y en las 100 000 ventas medidas.
+- **Entregar en una transacción.** Se busca o crea el contacto, se inserta la venta y se marca el encargo como entregado con el `venta_id`. Si el encargo ya no estaba pendiente, se deshace todo: nunca hay ventas duplicadas.
+- **TTL sobre `expira`**, que solo existe en los pendientes (lo exige el validador). Un encargo que nadie atendió se borra 2 días después de la actividad. Los entregados y cancelados quedan de historial en Mis compras.
+
 ## Inicio de sesión y permisos (Issues #96, #97 y #98)
 
 ### 1. Usuarios en MongoDB con contraseña cifrada

@@ -13,6 +13,8 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P7 | Ventas: dos ventas simultáneas del mismo número de rifa | OK | 2026-10-25 | Kendall |
 | P8 | Ventas: datos inválidos, número repetido y actividad finalizada | OK (12 de 12, local) | 2026-10-24 | Kendall |
 | P9 | Ventas: acceso según el rol y token CSRF (sin sesión, comunidad, admin) | OK (12 de 12, local) | 2026-10-24 | Kendall |
+| P10 | Ventas: la comunidad aparta números de rifa y la junta confirma el pago | OK (36 de 36, local) | 2026-10-27 | Kendall |
+| P11 | Ventas: encargos de la comunidad en turnos y ferias | OK (39 de 39, local) | 2026-10-27 | Kendall |
 
 ---
 
@@ -271,3 +273,40 @@ Comprueba que los permisos se aplican en el servidor y que la comunidad no ve da
 | 12 | Comunidad | Revisar el código HTML de la rifa | No aparece ningún nombre de comprador, ni en los `title` de la cuadrícula | OK |
 
 **Resultado obtenido:** 12 de 12 OK, en local con el driver real de PHP y sesiones de los dos roles (2026-10-24). Las filas 3 y 12 dependen de la consulta cubierta de la rifa: para la comunidad la página solo pide `{_id: 0, numero: 1}`, así que el comprador nunca llega a PHP.
+
+## P10 · Apartar números de rifa (Issue #114)
+
+Se probó con dos cuentas de comunidad y la junta, en local con el driver real de PHP y transacciones (2026-10-27). Los 36 casos salieron OK:
+
+| Caso | Esperado |
+| --- | --- |
+| Apartar un número libre | Queda a nombre de la cuenta, marcado "Tuyo", con aviso de 48 h; el total recaudado no cambia |
+| Otra cuenta aparta el mismo número, o uno ya vendido | "Ya no está disponible" (índice único, 11000) |
+| La otra cuenta mira la rifa | Ve el número ocupado, sin el nombre de quien lo apartó |
+| Sexto apartado sin pagar en la misma rifa | Rechazado por el límite de 5 |
+| Sin token, número 100, rifa sin precio, rifa finalizada | No se aparta |
+| La junta usa *apartar* / la comunidad usa *confirmar* | 403 |
+| Liberar un apartado propio / de otra persona | Se libera / no se libera |
+| Confirmar el pago | Pasa a pagado, el total sube y se crea el contacto, o se reutiliza si ya existe por correo |
+| Confirmar dos veces el mismo | Se rechaza sin cambiar nada |
+| Mis compras | Muestra los números de la persona con su rifa (`$lookup`) y su estado |
+
+**Pendiente en Atlas:** comprobar que el TTL libera un apartado vencido. Para eso hay que crear uno con `vence` en el pasado cercano y esperar ~60 s, igual que en P5.
+
+## P11 · Encargos en turnos y ferias (Issue #115)
+
+Se probó en local con el driver real de PHP y transacciones (2026-10-27). Los 39 casos salieron OK:
+
+| Caso | Esperado |
+| --- | --- |
+| Menú con precio 0 o producto repetido | El formulario de la actividad muestra el error |
+| Encargo vacío, más de 20 unidades, cuarto encargo pendiente | Rechazado |
+| Encargo con un precio falso en el formulario | Se ignora: el total sale del menú guardado |
+| Encargar en una rifa, en una feria sin menú o en una actividad finalizada | No se puede |
+| La junta usa *encargar* / la comunidad usa *entregar* | 403 |
+| Entregar | Se crea la venta (el total sube) y el contacto; aparece en el listado de ventas con el comprador |
+| Entregar dos veces el mismo | Se rechaza y no hay venta duplicada |
+| Dos encargos de la misma persona | Se reutiliza su contacto |
+| Cancelar (junta) / retirar (la dueña) / retirar el de otra persona | Cancelado / retirado / no se puede |
+| Mis compras | Cada persona ve solo sus encargos, con su estado |
+| Cambiar una feria a rifa | Se borra el menú |
