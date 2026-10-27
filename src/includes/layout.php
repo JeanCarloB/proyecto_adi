@@ -149,6 +149,11 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
     ];
     if ($usuario) {
         $enlaces['mis'] = ['Mis solicitudes', 'src/publico/mis_solicitudes.php'];
+        // Con sesión, la persona no debe quedar encerrada en alquileres (Issue #113):
+        // siempre puede volver al inicio y a las actividades.
+        $enlaces = ['inicio' => ['Inicio', 'index.php']]
+            + $enlaces
+            + ['actividades' => ['Actividades', 'src/actividades/index.php']];
     }
     ?>
 <!doctype html>
@@ -167,7 +172,7 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
 
 <header class="adi-topbar">
     <div class="container">
-        <a class="adi-brand" href="<?= RAIZ ?>src/publico/calendario.php">
+        <a class="adi-brand" href="<?= RAIZ ?><?= $usuario ? 'index.php' : 'src/publico/calendario.php' ?>">
             <span class="adi-wordmark"><b>ADI</b>ministra</span>
             <span class="adi-tagline">Comunidad</span>
         </a>
