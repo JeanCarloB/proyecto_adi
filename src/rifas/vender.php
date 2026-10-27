@@ -47,6 +47,7 @@ try {
         'rifa_id'     => $rifa['_id'],
         'numero'      => (int) $numero,
         'contacto_id' => $idContacto,
+        'estado'      => 'pagado',
         'monto'       => $rifa['precio_numero'],   // el precio sale de la rifa, nunca del formulario
         'fecha'       => new UTCDateTime(),
     ]);

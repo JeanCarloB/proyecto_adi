@@ -87,6 +87,7 @@ if (esAdmin()) {
     if ($usuario && $usuario['rol'] !== 'admin') {
         unset($enlaces['espacios'], $enlaces['reservas'], $enlaces['calendario'], $enlaces['solicitudes']);
         unset($enlaces['ventas']);   // el listado de ventas tiene nombres de compradores: solo la junta
+        $enlaces['mis'] = ['Mis compras', 'src/actividades/mis.php', 'ventas'];   // sus números y encargos (Issue #114)
         $enlaces = ['publico' => ['Alquiler de espacios', 'src/publico/calendario.php', 'alquileres']] + $enlaces;
     }
     ?>
@@ -154,6 +155,9 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
         $enlaces = ['inicio' => ['Inicio', 'index.php']]
             + $enlaces
             + ['actividades' => ['Actividades', 'src/actividades/index.php']];
+        if ($usuario['rol'] !== 'admin') {
+            $enlaces['compras'] = ['Mis compras', 'src/actividades/mis.php'];
+        }
     }
     ?>
 <!doctype html>

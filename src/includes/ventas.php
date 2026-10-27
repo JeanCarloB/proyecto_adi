@@ -33,6 +33,12 @@ const ESTADOS_ACTIVIDAD = ['programada' => 'Programada', 'finalizada' => 'Finali
 /** Cada rifa tiene los números del 00 al 99. */
 const NUMEROS_RIFA = 100;
 
+/** Horas que un número apartado por la comunidad espera el pago antes de que el TTL lo libere (Issue #114). */
+const HORAS_APARTADO_RIFA = 48;
+
+/** Cuántos números puede tener apartados (sin pagar) una persona en una misma rifa. */
+const MAX_APARTADOS_RIFA = 5;
+
 /** Máximo de productos distintos en una sola venta. */
 const MAX_ITEMS = 15;
 
@@ -135,7 +141,8 @@ function aceptaVentas(?object $actividad): bool
  * Total recaudado por actividad, calculado en la base con aggregation pipeline.
  *
  * Turnos y ferias suman la colección ventas; las rifas suman los números
- * vendidos en la colección rifas. El $match por actividad_id usa el índice
+ * vendidos en la colección rifas. Los números apartados por la comunidad que
+ * todavía no se pagaron no cuentan (Issue #114). El $match por actividad_id usa el índice
  * {actividad_id, fecha} (y {rifa_id, numero} en rifas) como prefijo.
  *
  * @param ObjectId[] $ids
@@ -154,8 +161,12 @@ function totalesPorActividad(MongoDB\Database $baseDatos, array $ids): array
     ];
     foreach ($consultas as $coleccion => $campo) {
         $total = $coleccion === 'ventas' ? '$total' : '$monto';
+        $filtro = [$campo => ['$in' => array_values($ids)]];
+        if ($coleccion === 'rifas') {
+            $filtro['estado'] = ['$ne' => 'apartado'];   // los números sin "estado" (cargas viejas) son vendidos
+        }
         $pipeline = [
-            ['$match' => [$campo => ['$in' => array_values($ids)]]],
+            ['$match' => $filtro],
             ['$group' => ['_id' => '$' . $campo, 'n' => ['$sum' => 1], 'total' => ['$sum' => $total]]],
         ];
         foreach ($baseDatos->selectCollection($coleccion)->aggregate($pipeline) as $g) {
@@ -243,6 +254,37 @@ function inicioDiaLocal(string $fecha, bool $siguiente = false): ?UTCDateTime
         return null;
     }
     return new UTCDateTime($siguiente ? $dia->modify('+1 day') : $dia);
+}
+
+/** ObjectId del usuario con sesión, para filtrar "lo mío" (apartados, encargos). */
+function miUsuarioId(): ObjectId
+{
+    return new ObjectId(requiereLogin()['id']);
+}
+
+/**
+ * Busca el contacto de una persona por su correo, sin distinguir mayúsculas,
+ * y si no existe lo registra como vecino. Mismo criterio que la aprobación de
+ * solicitudes de alquiler. Se llama dentro de una transacción ($sesion).
+ */
+function contactoPorCorreo(MongoDB\Database $baseDatos, string $nombre, string $correo, MongoDB\Driver\Session $sesion): ObjectId
+{
+    $contactos = $baseDatos->selectCollection('contactos');
+    $contacto  = $contactos->findOne(
+        ['correo' => ['$regex' => '^' . preg_quote($correo, '/') . '$', '$options' => 'i']],
+        ['session' => $sesion, 'projection' => ['_id' => 1]]
+    );
+    if ($contacto) {
+        return $contacto['_id'];
+    }
+    return $contactos->insertOne([
+        'nombre'         => $nombre,
+        'tipo'           => 'vecino',
+        'correo'         => $correo,
+        'telefono'       => '',
+        'activo'         => true,
+        'fecha_registro' => new UTCDateTime(),
+    ], ['session' => $sesion])->getInsertedId();
 }
 
 /** Contactos activos para los selects (los que no tienen el campo "activo" cuentan como activos). */
