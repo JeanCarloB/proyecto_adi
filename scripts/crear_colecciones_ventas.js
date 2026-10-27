@@ -73,6 +73,20 @@ const esquemaActividades = {
       bsonType: "decimal",
       description: "Solo en rifas: precio de cada número, en colones",
     },
+    menu: {
+      bsonType: "array",
+      maxItems: 30,
+      description: "Solo en turnos y ferias: productos que la comunidad puede encargar (Issue #115). Embebido: siempre se lee con la actividad",
+      items: {
+        bsonType: "object",
+        required: ["producto", "precio"],
+        additionalProperties: false,
+        properties: {
+          producto: { bsonType: "string", minLength: 1, maxLength: 60 },
+          precio: { bsonType: "decimal" },
+        },
+      },
+    },
   },
 };
 
@@ -184,6 +198,67 @@ const validadorRifas = {
 
 aplicarValidador("rifas", validadorRifas);
 
+// --- encargos -------------------------------------------------------------
+
+const esquemaEncargos = {
+  bsonType: "object",
+  title: "Encargo de la comunidad en un turno o una feria (Issue #115)",
+  required: ["actividad_id", "usuario_id", "nombre", "correo", "items", "total", "estado", "creado"],
+  additionalProperties: false,
+  properties: {
+    _id: { bsonType: "objectId" },
+    actividad_id: { bsonType: "objectId", description: "Turno o feria del encargo" },
+    usuario_id: { bsonType: "objectId", description: "Cuenta de comunidad que encargó" },
+    nombre: { bsonType: "string", maxLength: 120 },
+    correo: { bsonType: "string", maxLength: 200, description: "Al entregar se busca o se crea el contacto con este correo" },
+    items: {
+      bsonType: "array",
+      minItems: 1,
+      description: "Mismo formato que los items de una venta; el precio sale del menú",
+      items: {
+        bsonType: "object",
+        required: ["producto", "cantidad", "precio"],
+        additionalProperties: false,
+        properties: {
+          producto: { bsonType: "string", minLength: 1 },
+          cantidad: { bsonType: ENTERO, minimum: 1 },
+          precio: { bsonType: "decimal" },
+        },
+      },
+    },
+    total: { bsonType: "decimal" },
+    estado: {
+      enum: ["pendiente", "entregado", "cancelado"],
+      description: "Al entregarlo se registra la venta; cancelado lo hace la junta",
+    },
+    nota: { bsonType: "string", maxLength: 200, description: "Comentario opcional de quien encarga" },
+    creado: { bsonType: "date" },
+    resuelto: { bsonType: "date", description: "Cuándo se entregó o canceló" },
+    venta_id: { bsonType: "objectId", description: "Venta que se creó al entregar" },
+    expira: {
+      bsonType: "date",
+      description: "Solo en pendientes: el TTL borra el encargo que nadie atendió después de la actividad",
+    },
+  },
+};
+
+// Un encargo pendiente DEBE tener "expira"; uno entregado o cancelado NO (queda de historial),
+// y uno entregado debe apuntar a su venta.
+const validadorEncargos = {
+  $and: [
+    { $jsonSchema: esquemaEncargos },
+    {
+      $or: [
+        { estado: "pendiente", expira: { $exists: true } },
+        { estado: "entregado", expira: { $exists: false }, venta_id: { $exists: true } },
+        { estado: "cancelado", expira: { $exists: false } },
+      ],
+    },
+  ],
+};
+
+aplicarValidador("encargos", validadorEncargos);
+
 // --- Índices --------------------------------------------------------------
 //
 // Sin nombre propio a propósito: así coinciden con los que crea
@@ -205,6 +280,15 @@ print("  compuesto {actividad_id, fecha}: ventas de una actividad y su total rec
 
 adi.ventas.createIndex({ fecha: -1 });
 print("  {fecha: -1}: listado general de ventas, más recientes primero y por rango de fechas");
+
+adi.encargos.createIndex({ actividad_id: 1, estado: 1, creado: 1 });
+print("  {actividad_id, estado, creado}: encargos pendientes de una actividad, del más viejo al más nuevo");
+
+adi.encargos.createIndex({ usuario_id: 1, creado: -1 });
+print("  {usuario_id, creado}: los encargos de cada persona en Mis compras");
+
+adi.encargos.createIndex({ expira: 1 }, { expireAfterSeconds: 0 });
+print("  TTL sobre expira: un encargo pendiente que nadie atendió se borra solo");
 
 verificar();
 
@@ -235,7 +319,7 @@ function aplicarValidador(coleccion, validador) {
 function verificar() {
   print("\n--- Estado actual ---");
 
-  ["actividades", "ventas", "rifas"].forEach(function (coleccion) {
+  ["actividades", "ventas", "rifas", "encargos"].forEach(function (coleccion) {
     const info = adi.getCollectionInfos({ name: coleccion });
     if (info.length === 0) {
       print(coleccion + ": NO EXISTE");
