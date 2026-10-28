@@ -138,7 +138,7 @@ Variables de entorno (`.env.example`):
 
 Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK. Sin sesión se ven las cinco primeras; la escritura y los detalles de la base solo los ve administración.
 
-**Cuentas de prueba:** `php scripts/crear_usuarios_prueba.php` crea `admin@example.com` y `comunidad@example.com` para probar el login y los permisos.
+**Cuentas de prueba:** `php scripts/crear_usuarios_prueba.php` crea `admin@example.com` y `comunidad@example.com` para probar el login y los permisos. Después, un admin registra el resto de usuarios desde **Usuarios** en el menú (`src/usuarios/`): correo, contraseña y rol, y puede cambiar el rol o desactivar una cuenta.
 
 **Seguridad:** el clúster de Atlas solo acepta la IP del servidor (nunca `0.0.0.0/0`), un `.htaccess` bloquea el acceso web a `.env`, `vendor/`, `scripts/`, `docs/` y `.git/`, y en el repositorio solo vive `.env.example`. Las contraseñas se guardan con `password_hash`, los permisos por rol se validan en el servidor y los formularios de administración llevan token CSRF (ver [`docs/decisiones.md`](docs/decisiones.md#inicio-de-sesión-y-permisos-issues-96-97-y-98)).
 
