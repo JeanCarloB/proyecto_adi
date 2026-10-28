@@ -46,7 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hash = $usuario['contrasena'] ?? '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
             $correcta = password_verify($contrasena, $hash);
 
-            if ($usuario && $correcta && isset(ROLES[$usuario['rol'] ?? ''])) {
+            // Una cuenta desactivada desde src/usuarios/ no entra (sin el campo "activo" cuenta como activa).
+            $activa = ($usuario['activo'] ?? true) !== false;
+
+            if ($usuario && $correcta && $activa && isset(ROLES[$usuario['rol'] ?? ''])) {
                 if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
                     $baseDatos->selectCollection('usuarios')->updateOne(
                         ['_id' => $usuario['_id']],
