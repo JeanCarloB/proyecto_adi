@@ -6,6 +6,8 @@ Proyecto Final · Tópicos Avanzados de Bases de Datos · Universidad Nacional �
 
 > La ADI administra sus espacios, vende en sus actividades y cuida sus relaciones desde un solo sistema, sin dobles alquileres y sin perder ventas.
 
+**Video de demostración:** [youtu.be/twGiUHklAC8](https://youtu.be/twGiUHklAC8) · **Aplicación:** [grupo4.crnube.net/clientes2/proyecto](https://grupo4.crnube.net/clientes2/proyecto/) · **Release:** [`v1.0.0`](https://github.com/JeanCarloB/proyecto_adi/releases/tag/v1.0.0)
+
 ---
 
 ## 1. El problema
@@ -76,7 +78,7 @@ Cada regla del negocio la garantiza la base de datos:
 | Apartados que vencen solos | Índice TTL sobre el campo `vence`. Al confirmar el pago se hace `$unset` de `vence` y la reserva queda permanente. |
 | Números de rifa sin repetir | Índice único `{rifa_id, numero}` en `rifas`. |
 | Total recaudado por actividad | Aggregation pipeline sobre `ventas`. |
-| Historial del contacto | `$lookup` desde `contactos` hacia `reservas` y `ventas`. |
+| Historial del contacto | `$lookup` desde `contactos` hacia `seguimientos` (notas y recordatorios). El historial con reservas y ventas queda en el roadmap. |
 | Datos válidos | JSON Schema en todas las colecciones. |
 
 ### Colecciones
@@ -240,8 +242,8 @@ Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK.
 | Integrante | Módulo | Responsabilidad |
 | --- | --- | --- |
 | Hazel Molina | Alquiler de espacios | Colecciones `espacios` y `reservas`, índice único anti-doble alquiler, índice TTL de apartados, CRUD y calendario |
-| Kendall | Ventas en actividades | Colecciones `actividades`, `ventas` y `rifas`, venta de rifas con índice único, aggregation del total por actividad |
-| María | Contactos y relaciones | Colecciones `contactos` y `seguimientos`, historial con `$lookup`, recordatorios, comparación embebido vs. referencias |
+| Kendall Ortega | Ventas en actividades | Colecciones `actividades`, `ventas` y `rifas`, venta de rifas con índice único, aggregation del total por actividad |
+| María José Rodríguez | Contactos y relaciones | Colecciones `contactos` y `seguimientos`, historial con `$lookup`, recordatorios, comparación embebido vs. referencias |
 | Jean Carlo Bermúdez | Infraestructura, integración y seguridad | Repositorio, clúster Atlas, servidor, generador de 100 000 ventas sintéticas, mediciones con `explain()`, pruebas, login con roles y permisos |
 
 ## 10. Estado del proyecto
@@ -251,9 +253,9 @@ Luego abrir `diagnostico.php` y confirmar que las 6 verificaciones siguen en OK.
 | S1 | 13 | Problema, arquitectura y repositorio · `v0.1.0` | Entregado · [bitácora](docs/seguimientos/S1.md) |
 | S2 | 14 | Núcleo funcional · `v0.2.0` | Entregado · [bitácora](docs/seguimientos/S2.md) |
 | S3 | 15 | Integración, pruebas y medición · `v0.3.0` | Entregado · [bitácora](docs/seguimientos/S3.md) |
-| S4 | 16 | Release candidate · `v0.9.0` | En curso |
+| S4 | 16 | Release candidate y entrega final · `v1.0.0` | Entregado · [bitácora](docs/seguimientos/S4.md) |
 
-Los cambios por versión están en [`CHANGELOG.md`](CHANGELOG.md).
+El grupo expone en la semana 16, así que el S4 se entrega directamente como `v1.0.0`, como permite el enunciado. Los cambios por versión están en [`CHANGELOG.md`](CHANGELOG.md).
 
 ### Documentación
 

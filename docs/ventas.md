@@ -70,10 +70,12 @@ Preparación: datos cargados con `scripts/cargar_datos.js`, índices con `script
 | Corrección | Por qué | PR |
 | --- | --- | --- |
 | `precio_numero` en las rifas de la carga de datos | Las rifas cargadas no se podían vender hasta editarlas una por una | #93 |
-| Esta guía, el guion de la demo y las capturas finales | Material para la exposición | este PR |
+| Esta guía, el guion de la demo y las capturas finales | Material para la exposición | — |
+| La comunidad ya no pierde el acceso a Actividades en las páginas públicas | El menú de la comunidad cambiaba según la página | #116 |
+| La comunidad aparta números de rifa y la junta confirma el pago | Antes el vecino tenía que pedírselo a la junta por fuera del sistema | #117 |
+| Encargos de la comunidad en turnos y ferias | El vecino puede pedir del menú y la junta lo entrega y registra la venta | #118 |
 
 ### Pendientes conocidos
 
-- **P7 y mediciones del módulo en Atlas.** Los scripts están listos (`prueba_rifa_concurrencia.ps1` y `medir_ventas.js`), pero hay que correrlos en Atlas y pegar los resultados (Issues #35, #36 y #85).
-- **La comunidad no puede apartar un número desde el sistema.** Se lo pide a la junta, que lo registra. Hacerlo en línea necesitaría pagos o apartados con vencimiento, como las solicitudes de alquiler. Queda en el roadmap.
+- **Apartados de rifa en Atlas:** falta comprobar en Atlas que el TTL libera un apartado vencido (P10). En local la regla está probada.
 - **Barra de navegación de administración.** Con los 8 módulos, en pantallas de unos 1 280 px el botón *Salir* queda muy a la derecha. Es del diseño compartido (`layout.php`), así que se coordina con el resto del equipo.

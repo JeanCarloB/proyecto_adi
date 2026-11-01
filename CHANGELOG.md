@@ -1,22 +1,29 @@
 # Changelog
 
 Todos los cambios importantes de ADIministra se registran en este archivo.
-El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones siguen los seguimientos del curso (`v0.1.0` = S1, `v0.2.0` = S2, `v0.3.0` = S3, `v0.9.0` = S4).
+El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones siguen los seguimientos del curso (`v0.1.0` = S1, `v0.2.0` = S2, `v0.3.0` = S3). El grupo expone en la semana 16, así que el S4 se entrega directamente como `v1.0.0`, como permite el enunciado.
 
-## [Sin publicar]
+## [1.0.0] - Seguimiento 4 y entrega final
 
 ### Agregado
+- Video de demostración enlazado en el README y en `portal.yml` (https://youtu.be/twGiUHklAC8) (Issue #102).
+- **Ventas:** la comunidad aparta números de rifa (hasta 5 sin pagar por rifa, con vencimiento de 48 h) y la junta confirma el pago; *Mis compras* muestra los números de cada persona con `$lookup` (PR #117; Issue #114).
+- **Ventas:** encargos de la comunidad en turnos y ferias a partir del menú de la actividad; al entregarlos se crea la venta y el contacto en una transacción (PR #118; Issue #115).
+- Pruebas P10 (apartados de rifa) y P11 (encargos), y sus decisiones técnicas en `docs/decisiones.md` (PR #118).
+- **Caché opcional con Redis** del resumen del listado de ventas, con invalidación al registrar o anular una venta y respaldo en MongoDB si Redis no responde (PR #119).
+- **Usuarios:** módulo de administración (`src/usuarios/`) para registrar cuentas, cambiar el rol y desactivarlas (PR #120).
+- **Contactos:** `scripts/medir_contactos.js` mide el listado y el historial con `$lookup` (3 corridas y mediana), y el teléfono solo acepta números (PR #112).
 - `portal.yml`: ficha del proyecto para el portal del curso (PR #106; Issue #103).
 - Resultados de las pruebas generales P1, P2 y P3 con capturas en `docs/pruebas.md` (PR #107; Issue #50).
 - **Instalación:** prueba de instalación desde cero siguiendo solo `docs/instalacion.md`, con su registro al final de la guía (PR #108; Issue #51).
 - **Alquileres:** guía del módulo con el guion de la demo en `docs/alquileres.md` y 9 capturas finales `s4-alquileres-*.png` (PR #109; Issue #19).
 - Cuadro de confirmación con el estilo de la aplicación (`adiConfirmar` y `data-confirmar` en `src/includes/layout.php`) en lugar de `confirm()` del navegador, usado en confirmar pago, cancelar reserva, aprobar y retirar solicitudes y activar o desactivar espacios (PR #109).
-- Bitácora `docs/seguimientos/S4.md` (Issue #55).
+- Bitácora `docs/seguimientos/S4.md` completa (PR #110; Issue #55).
 - Pie de página en todas las pantallas con enlaces a **Acerca de**, al repositorio y a la licencia, y página pública `acerca.php` con el equipo, el curso y la documentación (PR #111).
-- **Nombre de la asociación** como parámetro de la instalación: colección `configuracion` (un documento `{_id: "asociacion", nombre}` con JSON Schema en `scripts/crear_colecciones.js`), pantalla `src/configuracion/index.php` para que la junta lo edite y nombre visible debajo del logo en todas las pantallas, también en las públicas. Lo pidió el profesor en el seguimiento 3.
+- **Nombre de la asociación** como parámetro de la instalación: colección `configuracion` (un documento `{_id: "asociacion", nombre}` con JSON Schema en `scripts/crear_colecciones.js`), pantalla `src/configuracion/index.php` para que la junta lo edite y nombre visible debajo del logo en todas las pantallas, también en las públicas. Lo pidió el profesor en el seguimiento 3 (PR #121).
 
 ### Cambiado
-- **Caché con Redis:** las claves usan el prefijo `grupo4:adi:` que exige el enunciado (antes `administra:`), y el host, el puerto, la contraseña y el prefijo salen del `.env` (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_PREFIJO`). Con `REDIS_HOST` vacío la caché queda desactivada. Documentado en el README, `docs/decisiones.md`, `docs/instalacion.md` y la prueba P12.
+- **Caché con Redis:** las claves usan el prefijo `grupo4:adi:` que exige el enunciado (antes `administra:`), y el host, el puerto, la contraseña y el prefijo salen del `.env` (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_PREFIJO`). Con `REDIS_HOST` vacío la caché queda desactivada. Documentado en el README, `docs/decisiones.md`, `docs/instalacion.md` y la prueba P12 (PR #122).
 - Barra superior: el nombre de la asociación reemplaza a "Gestión comunal" debajo del logo, y en pantallas de 1400 px o más la barra, el contenido y el pie llegan a 1600 px de ancho.
 - `docs/instalacion.md` corregido con lo que falló en la prueba desde cero: PHP sin XAMPP y `mongosh` en Windows (instalación y `PATH`), `ALTCHA_HMAC_KEY` obligatoria, paso de `crear_usuarios_prueba.php`, prueba con `php -S`, 5 verificaciones sin sesión y 6 con admin en `diagnostico.php`, y los síntomas reales en la tabla de problemas (PR #108).
 - `.env.example`: el comentario de `ALTCHA_HMAC_KEY` dice que es obligatoria y que es la clave del captcha del login (PR #108).
@@ -24,6 +31,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 ### Corregido
 - **Alquileres:** *Confirmar pago* y *Cancelar reserva* desde la tarjeta del calendario fallaban con "El formulario venció" porque `calendario.js` no enviaba el token CSRF que exigen `confirmar.php` y `cancelar.php` desde el PR #95 (PR #109).
 - `docs/seguimientos/S3.md`: el captcha ALTCHA está en el inicio de sesión, no en el formulario de solicitudes.
+- La comunidad perdía el acceso a Actividades en las páginas públicas (PR #116).
+- `docs/ventas.md`: pendientes del módulo al día.
 
 ## [0.3.0] - Seguimiento 3
 
