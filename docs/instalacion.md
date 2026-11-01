@@ -114,6 +114,18 @@ Datos de prueba, en una base aparte para no tocar los datos compartidos (opciona
 mongosh "<URI>/adi_prueba" --file scripts/cargar_datos.js
 ```
 
+### Caché con Redis (opcional)
+
+Sin Redis la aplicación funciona igual. Para activar la caché del resumen de ventas, en `.env`:
+
+```
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PREFIJO=grupo4:adi:
+```
+
+`composer install` ya trae `predis/predis`. En el Redis compartido del servidor todas las claves deben empezar con `grupo4:`, y nunca se usa `FLUSHALL` ni `FLUSHDB`.
+
 ## 5. Verificación
 
 1. Levantar el sitio:

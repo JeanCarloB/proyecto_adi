@@ -70,7 +70,7 @@ require_once dirname(__DIR__) . '/includes/redis.php';
 
 $redis = conexionRedis();
 
-$claveResumen = 'administra:ventas:resumen:' . hash(
+$claveResumen = claveRedis('ventas:resumen:') . hash(
     'sha256',
     json_encode([
         'actividad' => isset($filtro['actividad_id'])
@@ -128,7 +128,7 @@ if (!$desdeCache) {
         try {
             $redis->setex(
                 $claveResumen,
-                60,
+                REDIS_TTL_RESUMEN,
                 json_encode($resumen, JSON_THROW_ON_ERROR)
             );
         } catch (Throwable $e) {

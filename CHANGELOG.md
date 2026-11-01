@@ -16,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - **Nombre de la asociación** como parámetro de la instalación: colección `configuracion` (un documento `{_id: "asociacion", nombre}` con JSON Schema en `scripts/crear_colecciones.js`), pantalla `src/configuracion/index.php` para que la junta lo edite y nombre visible debajo del logo en todas las pantallas, también en las públicas. Lo pidió el profesor en el seguimiento 3.
 
 ### Cambiado
+- **Caché con Redis:** las claves usan el prefijo `grupo4:adi:` que exige el enunciado (antes `administra:`), y el host, el puerto, la contraseña y el prefijo salen del `.env` (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_PREFIJO`). Con `REDIS_HOST` vacío la caché queda desactivada. Documentado en el README, `docs/decisiones.md`, `docs/instalacion.md` y la prueba P12.
 - Barra superior: el nombre de la asociación reemplaza a "Gestión comunal" debajo del logo, y en pantallas de 1400 px o más la barra, el contenido y el pie llegan a 1600 px de ancho.
 - `docs/instalacion.md` corregido con lo que falló en la prueba desde cero: PHP sin XAMPP y `mongosh` en Windows (instalación y `PATH`), `ALTCHA_HMAC_KEY` obligatoria, paso de `crear_usuarios_prueba.php`, prueba con `php -S`, 5 verificaciones sin sesión y 6 con admin en `diagnostico.php`, y los síntomas reales en la tabla de problemas (PR #108).
 - `.env.example`: el comentario de `ALTCHA_HMAC_KEY` dice que es obligatoria y que es la clave del captcha del login (PR #108).

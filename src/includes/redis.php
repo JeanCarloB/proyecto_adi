@@ -1,11 +1,43 @@
 <?php
+/**
+ * Caché opcional con Redis para el resumen de ventas (PR #119).
+ *
+ * MongoDB sigue siendo la única fuente de verdad: Redis solo guarda por 60 s el
+ * total y la cantidad de ventas que calcula el aggregation de src/ventas/index.php.
+ *
+ * Configuración en .env (ver .env.example):
+ *   REDIS_HOST      vacío = sin caché (la aplicación funciona igual, todo sale de MongoDB)
+ *   REDIS_PORT      6379 por defecto
+ *   REDIS_PASSWORD  opcional
+ *   REDIS_PREFIJO   prefijo de TODAS las claves; el enunciado exige "grupoX:" en el
+ *                   Redis compartido del servidor, así que por defecto es "grupo4:adi:"
+ *
+ * Si Redis no responde, conexionRedis() devuelve null y la página sigue sin caché.
+ * Nunca se usa FLUSHALL ni FLUSHDB: se invalida solo lo nuestro, por prefijo.
+ */
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
+/** Segundos que vive un resumen de ventas en la caché. */
+const REDIS_TTL_RESUMEN = 60;
+
+/** Lee una variable de Redis del .env que ya cargó conexion.php. */
+function configRedis(string $clave, string $defecto = ''): string
+{
+    global $env;
+    $valor = is_array($env ?? null) ? trim((string) ($env[$clave] ?? '')) : '';
+    return $valor !== '' ? $valor : $defecto;
+}
+
+/** Arma una clave de Redis con el prefijo obligatorio del grupo. */
+function claveRedis(string $resto): string
+{
+    return configRedis('REDIS_PREFIJO', 'grupo4:adi:') . $resto;
+}
+
 /**
- * Devuelve una conexión a Redis.
- * Si Redis no está disponible, devuelve null para permitir
- * que la aplicación continúe sin utilizar la caché.
+ * Devuelve una conexión a Redis, o null si no está configurado o no responde,
+ * para que la aplicación continúe sin utilizar la caché.
  */
 function conexionRedis(): ?Predis\Client
 {
@@ -15,17 +47,27 @@ function conexionRedis(): ?Predis\Client
     if ($inicializado) {
         return $redis;
     }
-
     $inicializado = true;
 
-    try {
-        $redis = new Predis\Client([
-            'scheme' => 'tcp',
-            'host' => '127.0.0.1',
-            'port' => 6379,
-            'connect_timeout' => 1,
-        ]);
+    $host = configRedis('REDIS_HOST');
+    if ($host === '') {
+        return null;   // caché desactivada en esta instalación
+    }
 
+    try {
+        $parametros = [
+            'scheme'          => 'tcp',
+            'host'            => $host,
+            'port'            => (int) configRedis('REDIS_PORT', '6379'),
+            'timeout'         => 1,
+            'read_write_timeout' => 1,
+        ];
+        $password = configRedis('REDIS_PASSWORD');
+        if ($password !== '') {
+            $parametros['password'] = $password;
+        }
+
+        $redis = new Predis\Client($parametros);
         $redis->connect();
         $redis->ping();
 
@@ -39,7 +81,8 @@ function conexionRedis(): ?Predis\Client
 }
 
 /**
- * Invalida los resúmenes de ventas almacenados en Redis.
+ * Invalida los resúmenes de ventas guardados en Redis (al registrar, editar o
+ * anular una venta). Borra solo las claves con nuestro prefijo, con SCAN.
  */
 function invalidarCacheVentas(): void
 {
@@ -56,7 +99,7 @@ function invalidarCacheVentas(): void
             $resultado = $redis->scan(
                 $cursor,
                 'MATCH',
-                'administra:ventas:resumen:*',
+                claveRedis('ventas:resumen:*'),
                 'COUNT',
                 100
             );
