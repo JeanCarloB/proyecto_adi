@@ -102,11 +102,25 @@ Cada regla del negocio la garantiza la base de datos:
 - **Funciones avanzadas:** aggregation pipeline, `$lookup`, JSON Schema, índices compuestos, únicos y TTL.
 - **Comparación experimental:** consultas con y sin índice (`explain()`) y modelo embebido vs. referencias.
 
+### Complemento opcional: caché con Redis
+
+MongoDB es el único motor con datos del sistema. Redis se puede activar como **caché** del resumen de ventas (total y cantidad de ventas del listado), que con 100 000 ventas es la consulta más pesada:
+
+| Dato | Dónde vive | Por qué |
+| --- | --- | --- |
+| Ventas, reservas, contactos, usuarios y todo lo demás | MongoDB | Fuente de verdad: reglas, índices y validación |
+| Resumen del listado de ventas (total y cantidad), 60 s | Redis, claves `grupo4:adi:ventas:resumen:*` | Evitar repetir el aggregation sobre 100 000 ventas en cada visita |
+
+- **Consistencia:** al registrar, editar o anular una venta se borran los resúmenes guardados (SCAN por prefijo, nunca `FLUSHALL` ni `FLUSHDB`); además cada resumen vence a los 60 s.
+- **Si Redis se cae:** la página calcula el resumen en MongoDB como si no hubiera caché. No se pierde ningún dato.
+- **Desactivado por defecto:** con `REDIS_HOST` vacío no se usa. Detalles en [`docs/decisiones.md`](docs/decisiones.md#caché-opcional-con-redis-pr-119).
+
 ## 5. Tecnologías
 
 | Uso | Herramienta |
 | --- | --- |
 | Base de datos | MongoDB Atlas (clúster M0 gratuito, AWS Oregon), base `adi` |
+| Caché (opcional) | Redis con `predis/predis` |
 | Lenguaje | PHP 8.3 + extensión `mongodb` 2.4 + librería `mongodb/mongodb` 2.x (Composer) |
 | Interfaz | HTML + Bootstrap 5 |
 | Datos de prueba | `fakerphp/faker` — datos sintéticos, sin datos personales reales |
@@ -135,6 +149,8 @@ Variables de entorno (`.env.example`):
 | `MONGODB_URI` | Cadena de conexión del clúster de Atlas. **Nunca se sube al repositorio.** |
 | `MONGODB_DB` | Nombre de la base de datos (`adi`). |
 | `ALTCHA_HMAC_KEY` | Clave secreta del captcha del login y de las solicitudes (texto aleatorio de 32 caracteres o más). **Nunca se sube al repositorio.** |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Caché opcional con Redis. Con `REDIS_HOST` vacío no se usa. |
+| `REDIS_PREFIJO` | Prefijo de todas las claves de Redis (`grupo4:adi:`), obligatorio en el Redis compartido del servidor. |
 
 Verificación: abrir `diagnostico.php` en el navegador con sesión de admin. Las seis comprobaciones (PHP, extensión, Composer, `.env`, conexión y escritura) deben salir en OK. Sin sesión se ven las cinco primeras; la escritura y los detalles de la base solo los ve administración.
 

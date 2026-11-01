@@ -15,6 +15,7 @@ Cada prueba indica la preparación, los pasos, el resultado esperado y el result
 | P9 | Ventas: acceso según el rol y token CSRF (sin sesión, comunidad, admin) | OK (12 de 12, local) | 2026-10-24 | Kendall |
 | P10 | Ventas: la comunidad aparta números de rifa y la junta confirma el pago | OK (36 de 36, local) | 2026-10-27 | Kendall |
 | P11 | Ventas: encargos de la comunidad en turnos y ferias | OK (39 de 39, local) | 2026-10-27 | Kendall |
+| P12 | Caché de ventas: Redis no disponible o desactivado | OK (3 de 4, local; falta el caso 4 en el servidor) | 2026-10-31 | Hazel |
 
 ---
 
@@ -310,3 +311,18 @@ Se probó en local con el driver real de PHP y transacciones (2026-10-27). Los 3
 | Cancelar (junta) / retirar (la dueña) / retirar el de otra persona | Cancelado / retirado / no se puede |
 | Mis compras | Cada persona ve solo sus encargos, con su estado |
 | Cambiar una feria a rifa | Se borra el menú |
+
+---
+
+## P12 · Caché de ventas: Redis no disponible o desactivado
+
+Comprueba que Redis es solo un complemento: si no está configurado o no responde, el listado de ventas funciona igual con los datos de MongoDB.
+
+| # | Configuración | Acción | Esperado | Resultado |
+| --- | --- | --- | --- | --- |
+| 1 | `REDIS_HOST` vacío | Abrir `src/ventas/index.php` con sesión de admin | El listado y el resumen (total y cantidad) se ven normales; no se intenta conectar a Redis | OK: 100 002 ventas y ₡963.716.700, calculados en MongoDB |
+| 2 | `REDIS_HOST=127.0.0.1` sin Redis corriendo | Abrir el listado de ventas | Se ve igual, con una espera máxima de 1 s; el log dice "Redis no disponible" | OK: mismos datos, sin error en pantalla |
+| 3 | `REDIS_HOST=127.0.0.1` sin Redis corriendo | Registrar o anular una venta | Se guarda sin error; la invalidación de la caché se omite | OK: "La venta se registró." |
+| 4 | Redis disponible (servidor) | Abrir el listado dos veces y luego registrar una venta | La segunda visita usa la caché; después de la venta el resumen se recalcula con el total nuevo | _(pendiente, en el servidor)_ |
+
+**Resultado obtenido (2026-10-31, local, sin Redis instalado):** los casos 1 a 3 pasan. Con Redis desactivado o sin responder, el listado de ventas muestra los mismos datos de MongoDB y registrar una venta funciona igual: Redis es solo un complemento. El caso 4 necesita el Redis del servidor.

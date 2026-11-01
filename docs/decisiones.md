@@ -117,6 +117,22 @@ Un vecino aparta un número desde el sistema y lo paga después a la junta. El a
 - **Entregar en una transacción.** Se busca o crea el contacto, se inserta la venta y se marca el encargo como entregado con el `venta_id`. Si el encargo ya no estaba pendiente, se deshace todo: nunca hay ventas duplicadas.
 - **TTL sobre `expira`**, que solo existe en los pendientes (lo exige el validador). Un encargo que nadie atendió se borra 2 días después de la actividad. Los entregados y cancelados quedan de historial en Mis compras.
 
+## Caché opcional con Redis (PR #119)
+
+### 1. Qué guarda Redis y qué no
+Redis guarda solo el **resumen del listado de ventas** (total recaudado y cantidad de ventas para el filtro elegido), como un string JSON con vencimiento de 60 s. Es la consulta más pesada del sistema: un aggregation sobre 100 000 ventas. Todo lo demás vive solo en MongoDB, que es la fuente de verdad. Por eso el proyecto sigue siendo, en lo esencial, de un motor: si se quita Redis no se pierde ningún dato ni ninguna función.
+
+### 2. Cómo se mantiene consistente
+Dos mecanismos: al registrar, editar o anular una venta se llama a `invalidarCacheVentas()`, que borra con `SCAN` las claves `grupo4:adi:ventas:resumen:*`; y cada resumen vence solo a los 60 s, así que aunque una invalidación falle el dato viejo dura como máximo un minuto. Nunca se usa `FLUSHALL` ni `FLUSHDB`, porque el Redis del servidor es compartido entre grupos.
+
+### 3. Qué pasa si Redis se cae
+`conexionRedis()` intenta conectar con un tiempo de espera de 1 s; si falla, registra el error en el log y devuelve `null`. La página calcula el resumen directamente en MongoDB y se ve igual, solo un poco más lenta. Lo mismo si `REDIS_HOST` está vacío: la caché queda desactivada (prueba P12).
+
+### 4. Prefijo y configuración
+El enunciado exige el prefijo `grupoX:` en todas las claves del Redis compartido. El prefijo sale de `REDIS_PREFIJO` (por defecto `grupo4:adi:`) y el host, el puerto y la contraseña del `.env`, no del código, para poder instalarlo en otro servidor.
+
+**Alternativa descartada:** guardar el total recaudado en el documento de la actividad. Se descartó porque obliga a actualizar dos documentos en cada venta y el total podría desincronizarse; con la caché, el valor siempre sale del aggregation.
+
 ## Inicio de sesión y permisos (Issues #96, #97 y #98)
 
 ### 1. Usuarios en MongoDB con contraseña cifrada
