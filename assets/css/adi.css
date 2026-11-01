@@ -33,6 +33,7 @@
     --adi-mod-alquileres: #1d4f8c;
     --adi-mod-ventas:     #e0661b;
     --adi-mod-contactos:  #2f8a3a;
+    --adi-mod-usuarios:   #6b5b95;
 
     /* Estados: siempre con texto, nunca solo color */
     --adi-ok-bg:    #e7f4eb;
@@ -145,6 +146,7 @@ body {
 .adi-dot--alquileres { background: var(--adi-mod-alquileres); }
 .adi-dot--ventas     { background: var(--adi-mod-ventas); }
 .adi-dot--contactos  { background: var(--adi-mod-contactos); }
+.adi-dot--usuarios   { background: var(--adi-mod-usuarios); }
 
 .adi-nav a.is-active .adi-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, .9); }
 

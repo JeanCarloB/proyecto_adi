@@ -43,6 +43,7 @@ const MODULOS = [
     'alquileres' => 'Alquiler de espacios',
     'ventas'     => 'Ventas en actividades',
     'contactos'  => 'Contactos y relaciones',
+    'usuarios'   => 'Usuarios y permisos',
 ];
 
 function e(mixed $valor): string
@@ -78,6 +79,8 @@ if (esAdmin()) {
         'src/seguimientos/index.php',
         'contactos'
     ];
+
+    $enlaces['usuarios'] = ['Usuarios', 'src/usuarios/index.php', 'usuarios'];
 }
     $usuario = usuarioActual();
 
