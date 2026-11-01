@@ -12,8 +12,11 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y l
 - **Alquileres:** guía del módulo con el guion de la demo en `docs/alquileres.md` y 9 capturas finales `s4-alquileres-*.png` (PR #109; Issue #19).
 - Cuadro de confirmación con el estilo de la aplicación (`adiConfirmar` y `data-confirmar` en `src/includes/layout.php`) en lugar de `confirm()` del navegador, usado en confirmar pago, cancelar reserva, aprobar y retirar solicitudes y activar o desactivar espacios (PR #109).
 - Bitácora `docs/seguimientos/S4.md` (Issue #55).
+- Pie de página en todas las pantallas con enlaces a **Acerca de**, al repositorio y a la licencia, y página pública `acerca.php` con el equipo, el curso y la documentación (PR #111).
+- **Nombre de la asociación** como parámetro de la instalación: colección `configuracion` (un documento `{_id: "asociacion", nombre}` con JSON Schema en `scripts/crear_colecciones.js`), pantalla `src/configuracion/index.php` para que la junta lo edite y nombre visible debajo del logo en todas las pantallas, también en las públicas. Lo pidió el profesor en el seguimiento 3.
 
 ### Cambiado
+- Barra superior: el nombre de la asociación reemplaza a "Gestión comunal" debajo del logo, y en pantallas de 1400 px o más la barra, el contenido y el pie llegan a 1600 px de ancho.
 - `docs/instalacion.md` corregido con lo que falló en la prueba desde cero: PHP sin XAMPP y `mongosh` en Windows (instalación y `PATH`), `ALTCHA_HMAC_KEY` obligatoria, paso de `crear_usuarios_prueba.php`, prueba con `php -S`, 5 verificaciones sin sesión y 6 con admin en `diagnostico.php`, y los síntomas reales en la tabla de problemas (PR #108).
 - `.env.example`: el comentario de `ALTCHA_HMAC_KEY` dice que es obligatoria y que es la clave del captcha del login (PR #108).
 

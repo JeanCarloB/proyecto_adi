@@ -256,6 +256,26 @@ aplicarValidador("captchas_usados", {
 adi.captchas_usados.createIndex({ expira: 1 }, { expireAfterSeconds: 0 });
 print("  TTL sobre expira: los captcha usados se borran solos al vencer");
 
+// --- configuracion ---------------------------------------------------------
+//
+// Parámetros de la instalación. Por ahora un solo documento: {_id: "asociacion",
+// nombre}, el nombre de la ADI que se muestra arriba de la barra en todas las
+// pantallas. Así el mismo sistema sirve para cualquier asociación sin tocar el código.
+
+aplicarValidador("configuracion", {
+  $jsonSchema: {
+    bsonType: "object",
+    required: ["_id", "nombre"],
+    additionalProperties: false,
+    properties: {
+      _id: { enum: ["asociacion"], description: "Un solo documento de parámetros" },
+      nombre: { bsonType: "string", minLength: 3, maxLength: 120 },
+      actualizado: { bsonType: "date" },
+      actualizado_por: { bsonType: "string" },
+    },
+  },
+});
+
 print("\nListo. Apartado configurado a " + HORAS_APARTADO + " horas.");
 
 verificar();
@@ -287,7 +307,7 @@ function aplicarValidador(coleccion, validador) {
 function verificar() {
   print("\n--- Estado actual ---");
 
-  ["espacios", "reservas", "solicitudes", "captchas_usados"].forEach(function (coleccion) {
+  ["espacios", "reservas", "solicitudes", "captchas_usados", "configuracion"].forEach(function (coleccion) {
     const info = adi.getCollectionInfos({ name: coleccion });
     if (info.length === 0) {
       print(coleccion + ": NO EXISTE");
