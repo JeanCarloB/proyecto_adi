@@ -1286,3 +1286,18 @@ body > main.adi-page { flex: 1 0 auto; }
     border-bottom: 1px dashed var(--adi-border);
 }
 .adi-encargo-lista strong { font-weight: 500; display: block; }
+
+/* Nombre de la asociación, debajo del logo en todas las pantallas */
+.adi-brand-box { display: flex; flex-direction: column; justify-content: center; gap: 2px; flex: 0 1 15rem; min-width: 9rem; }
+.adi-brand-box .adi-brand { line-height: 1.1; }
+.adi-asociacion { display: flex; align-items: baseline; gap: .4rem; font-size: .75rem; line-height: 1.2; color: var(--adi-muted); min-width: 0; }
+.adi-asociacion-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.adi-asociacion-editar { color: var(--adi-muted); text-decoration: underline; text-underline-offset: 2px; flex: none; }
+.adi-asociacion-editar:hover { color: var(--adi-ink); }
+
+/* Aprovechar el ancho en pantallas grandes: barra, contenido y pie llegan hasta 1600 px */
+@media (min-width: 1400px) {
+    .adi-topbar .container,
+    .adi-page.container,
+    .adi-footer .container { max-width: 1600px; }
+}

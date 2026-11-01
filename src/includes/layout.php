@@ -38,6 +38,77 @@ require_once __DIR__ . '/sesion.php';   // usuarioActual(), esAdmin(), requiereL
 /** Repositorio público del proyecto (pie de página y Acerca de). */
 const REPO_URL = 'https://github.com/JeanCarloB/proyecto_adi';
 
+/** Nombre que se muestra mientras la junta no configure el de su asociación. */
+const ASOCIACION_POR_DEFECTO = 'Asociación de Desarrollo Integral';
+
+/** Segundos que se guarda el nombre en la sesión antes de volver a leerlo de MongoDB. */
+const ASOCIACION_CACHE_SEGUNDOS = 300;
+
+/**
+ * Nombre de la asociación que usa esta instalación (colección "configuracion",
+ * documento {_id: "asociacion"}). Se muestra debajo del logo en todas las
+ * pantallas para que el sistema sirva a cualquier ADI sin tocar el código.
+ *
+ * Se guarda unos minutos en la sesión para no consultar la base en cada página.
+ * Si la base no responde, se usa el nombre por defecto y la página sigue.
+ */
+function nombreAsociacion(): string
+{
+    static $nombre = null;
+    if ($nombre !== null) {
+        return $nombre;
+    }
+
+    iniciarSesion();
+    $cache = $_SESSION['asociacion'] ?? null;
+    if (is_array($cache) && ($cache['hasta'] ?? 0) > time()) {
+        return $nombre = $cache['nombre'];
+    }
+
+    $nombre = ASOCIACION_POR_DEFECTO;
+    try {
+        // Las variables de conexion.php quedan globales, igual que si la página lo hubiera incluido
+        global $env, $nombreBase, $clienteMongo, $baseDatos;
+        require_once __DIR__ . '/conexion.php';
+        $doc = $baseDatos->selectCollection('configuracion')->findOne(['_id' => 'asociacion']);
+        if ($doc && trim((string) ($doc['nombre'] ?? '')) !== '') {
+            $nombre = (string) $doc['nombre'];
+        }
+    } catch (Throwable $e) {
+        error_log('ADIministra: no se pudo leer el nombre de la asociación: ' . $e->getMessage());
+    }
+
+    guardarNombreAsociacionEnSesion($nombre);
+    return $nombre;
+}
+
+function guardarNombreAsociacionEnSesion(string $nombre): void
+{
+    iniciarSesion();
+    $_SESSION['asociacion'] = ['nombre' => $nombre, 'hasta' => time() + ASOCIACION_CACHE_SEGUNDOS];
+}
+
+/**
+ * Logo de la barra con el nombre de la asociación debajo (y "Editar" para la junta).
+ * $inicio: a dónde lleva el logo. $etiqueta: se usa como texto alternativo del logo.
+ */
+function marcaAsociacion(string $inicio, string $etiqueta): void
+{
+    ?>
+<div class="adi-brand-box">
+    <a class="adi-brand" href="<?= e($inicio) ?>" title="ADIministra · <?= e($etiqueta) ?>">
+        <span class="adi-wordmark"><b>ADI</b>ministra</span>
+    </a>
+    <div class="adi-asociacion">
+        <span class="adi-asociacion-nombre" title="<?= e(nombreAsociacion()) ?>"><?= e(nombreAsociacion()) ?></span>
+        <?php if (esAdmin()): ?>
+            <a href="<?= RAIZ ?>src/configuracion/index.php" class="adi-asociacion-editar">Editar</a>
+        <?php endif; ?>
+    </div>
+</div>
+    <?php
+}
+
 /** Módulos del sistema: nombre para mostrar y color (sale del logo). */
 const MODULOS = [
     'alquileres' => 'Alquiler de espacios',
@@ -99,7 +170,7 @@ if (esAdmin()) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($titulo) ?> · ADIministra</title>
+    <title><?= e($titulo) ?> · ADIministra · <?= e(nombreAsociacion()) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -110,10 +181,7 @@ if (esAdmin()) {
 
 <header class="adi-topbar">
     <div class="container">
-        <a class="adi-brand" href="<?= RAIZ ?>index.php">
-            <span class="adi-wordmark"><b>ADI</b>ministra</span>
-            <span class="adi-tagline">Gestión comunal</span>
-        </a>
+        <?php marcaAsociacion(RAIZ . 'index.php', 'Gestión comunal'); ?>
         <?php if ($usuario): ?>
         <nav class="adi-nav" aria-label="Módulos">
             <?php foreach ($enlaces as $clave => [$texto, $ruta, $modulo]): ?>
@@ -168,7 +236,7 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($titulo) ?> · ADIministra</title>
+    <title><?= e($titulo) ?> · ADIministra · <?= e(nombreAsociacion()) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -179,10 +247,7 @@ function encabezadoPublico(string $titulo, string $seccion = ''): void
 
 <header class="adi-topbar">
     <div class="container">
-        <a class="adi-brand" href="<?= RAIZ ?><?= $usuario ? 'index.php' : 'src/publico/calendario.php' ?>">
-            <span class="adi-wordmark"><b>ADI</b>ministra</span>
-            <span class="adi-tagline">Comunidad</span>
-        </a>
+        <?php marcaAsociacion(RAIZ . ($usuario ? 'index.php' : 'src/publico/calendario.php'), 'Comunidad'); ?>
         <nav class="adi-nav" aria-label="Secciones públicas">
             <?php foreach ($enlaces as $clave => [$texto, $ruta]): ?>
                 <a href="<?= RAIZ . $ruta ?>" class="<?= $clave === $seccion ? 'is-active' : '' ?>"
